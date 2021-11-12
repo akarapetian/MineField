@@ -11,6 +11,11 @@ export class minefield extends Scene {
         super();
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
+        const initial_corner_point = vec3(-50, 0, -50);
+        const row_operation = (s, p) => p ? Mat4.translation(0, .2, 0).times(p.to4(1)).to3()
+            : initial_corner_point;
+        const column_operation = (t, p) => Mat4.translation(.2, 0, 0).times(p.to4(1)).to3();
+        
         this.shapes = {
             torus: new defs.Torus(15, 15),
             torus2: new defs.Torus(3, 15),
@@ -18,7 +23,7 @@ export class minefield extends Scene {
             circle: new defs.Regular_2D_Polygon(1, 15),
             cylinder: new Shape_From_File("assets/sub.obj"),
             cube: new defs.Cube(3,3),
-
+            sheet: new defs.Grid_Patch(100, 500, row_operation, column_operation),
         };
 
         // *** Materials
@@ -27,7 +32,7 @@ export class minefield extends Scene {
                 {ambient: .4, specularity: 1, diffusivity: .6, color: hex_color("#ffffff")}),
         }
 
-        this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
+        this.initial_camera_location = Mat4.look_at(vec3(0, 2, 13), vec3(0, 0, 0), vec3(0, 1, 0));
         this.player_matrix = Mat4.identity().times(Mat4.scale(2,2,2)).times(Mat4.rotation(Math.PI,0,1,0)).times(Mat4.translation(0,0,-3));
         this.context = null;
         this.program_state = null;
@@ -59,6 +64,7 @@ export class minefield extends Scene {
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
         this.context = context;
         this.program_state = program_state;
+        let r = 5;
         if (!context.scratchpad.controls) {
             // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             // Define the global camera and projection matrices, which are stored in program_state.
@@ -90,6 +96,8 @@ export class minefield extends Scene {
             this.obstacles[i] = this.obstacles[i].times(Mat4.translation(0,0,1));
             this.shapes.cube.draw(context, program_state, this.obstacles[i], this.materials.test);
         }
+        this.shapes.sheet.draw(context, program_state, Mat4.identity(), this.materials.test);
+
     }
 }
 
