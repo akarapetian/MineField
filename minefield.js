@@ -57,6 +57,9 @@ export class minefield extends Scene {
         this.mines = []
         let x = 0
         let z = 0
+        this.score = 0
+        this.paused = false
+
         
         //initalize 10 randomly placed mines 
         //in future we need to guanantee non-collision between mines that spawn
@@ -82,11 +85,19 @@ export class minefield extends Scene {
         this.bullets.push(this.player_matrix.times(Mat4.scale(0.1,0.1,0.1)));
     }
 
+    pause() {
+        this.paused = !this.paused;
+    }
+
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
         this.key_triggered_button("right", ["d"], () => this.move_right());
         this.key_triggered_button("left", ["a"], () => this.move_left());
         this.key_triggered_button("fire", ["f"], () => this.fire_bullet());
+        this.key_triggered_button("paused", ["p"], () => this.pause());
+        this.live_string(box => {
+            box.textContent = "Your score is " + this.score + " so far"
+        });
     }
 
     display(context, program_state) {
@@ -119,38 +130,53 @@ export class minefield extends Scene {
         const light_position = vec4(0, 0, 0, 1);
 
         program_state.lights = [new Light(light_position, color(0, 0, 0, 1), 10000)]
-
-        this.shapes.cylinder.draw(context, program_state, model_transform, this.materials.test)
         this.shapes.cube.draw(context, program_state, horizon_transform, this.materials.horizon)
+        this.shapes.cylinder.draw(context, program_state, model_transform, this.materials.test)
+
+        if (!this.paused) {
         // this.shapes.cube.draw(context, program_state, this.ground_matrix, this.materials.ground)
 
-        for(let i = 0; i < this.bullets.length; i++){
-            this.bullets[i] = this.bullets[i].times(Mat4.translation(0,0,1));
-            this.shapes.cube.draw(context, program_state, this.bullets[i], this.materials.test);
-        }
-       
-        this.bullets = this.bullets.filter(x => x[2][3] > -20);
-        // this.shapes.horizon.draw(context, program_state, this.horizon_matrix, this.materials.horizon);
-        // this.shapes.ground.draw(context, program_state, this.ground_matrix, this.materials.ground);
-
-        let mine_transform = Mat4.identity()
-        
-        let spawnDistance = 10
-
-        //need to make z increase on each iteration
-        for(let i = 0; i < this.mines.length; i++){
-            
-            mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], 0, this.mines[i][1] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
-            this.mines[i][1] += 0.1
-            this.shapes.sphere.draw(context, program_state, mine_transform, this.materials.mines)
-
-            //check if any have passed the camera
-            if (this.mines[i][1] > 20){
-                //re-initalize the mine (delete and spawn new mine)
-                this.mines[i][0] = (Math.random() * 2 - 1) * 10
-                this.mines[i][1] = -1 * Math.random() * 10
+            for(let i = 0; i < this.bullets.length; i++){
+                this.bullets[i] = this.bullets[i].times(Mat4.translation(0,0,1));
+                this.shapes.cube.draw(context, program_state, this.bullets[i], this.materials.test);
             }
-             
+        
+            this.bullets = this.bullets.filter(x => x[2][3] > -20);
+            // this.shapes.horizon.draw(context, program_state, this.horizon_matrix, this.materials.horizon);
+            // this.shapes.ground.draw(context, program_state, this.ground_matrix, this.materials.ground);
+
+            let mine_transform = Mat4.identity()
+            
+            let spawnDistance = 10
+
+            //need to make z increase on each iteration
+            for(let i = 0; i < this.mines.length; i++){
+                
+                mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], 0, this.mines[i][1] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
+                this.mines[i][1] += 0.1
+                this.shapes.sphere.draw(context, program_state, mine_transform, this.materials.mines)
+
+                //check if any have passed the camera
+                if (this.mines[i][1] > 20){
+                    //re-initalize the mine (delete and spawn new mine)
+                    this.mines[i][0] = (Math.random() * 2 - 1) * 10
+                    this.mines[i][1] = -1 * Math.random() * 10
+                }
+                
+            }
+            this.score += 100;
+        }
+        else{
+            for(let i = 0; i < this.bullets.length; i++){
+                this.shapes.cube.draw(context, program_state, this.bullets[i], this.materials.test);
+            }
+            for(let i = 0; i < this.mines.length; i++){
+                let mine_transform = Mat4.identity()
+                let spawnDistance = 10
+                mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], 0, this.mines[i][1] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
+                mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], 0, this.mines[i][1] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
+                this.shapes.sphere.draw(context, program_state, mine_transform, this.materials.mines)
+            }
         }
 
     }
