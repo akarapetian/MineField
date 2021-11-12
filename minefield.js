@@ -43,6 +43,8 @@ export class minefield extends Scene {
             // ground: new Material(new defs.Phong_Shader(),
             //     {ambient: 1, specularity: 1, diffusivity: .6, color: hex_color("#ffffff")}),
             // ground: new Material(bump, {ambient: 1, texture: new Texture("assets/sand.jpg")}),
+            mines: new Material(new defs.Phong_Shader(),
+            {ambient: 1, specularity: 1, diffusivity: .6, color: hex_color("#808080")}),
         }
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 2, 13), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -52,7 +54,19 @@ export class minefield extends Scene {
         this.context = null;
         this.program_state = null;
         this.bullets = []
-        this.obstacles = []
+        this.mines = []
+        let x = 0
+        let z = 0
+        
+        //initalize 10 randomly placed mines 
+        //in future we need to guanantee non-collision between mines that spawn
+        for(let i = 0; i < 20; i++){
+            x = (Math.random() * 2 - 1) * 10
+            z = -1 * Math.random() * 10
+
+            this.mines.push([x, z])
+        }
+
     }
 
     move_left() {
@@ -114,12 +128,30 @@ export class minefield extends Scene {
             this.bullets[i] = this.bullets[i].times(Mat4.translation(0,0,1));
             this.shapes.cube.draw(context, program_state, this.bullets[i], this.materials.test);
         }
-        for(let i = 0; i < this.obstacles.length; i++){
-            this.obstacles[i] = this.obstacles[i].times(Mat4.translation(0,0,1));
-            this.shapes.cube.draw(context, program_state, this.obstacles[i], this.materials.test);
-        }
+       
+        this.bullets = this.bullets.filter(x => x[2][3] > -20);
         // this.shapes.horizon.draw(context, program_state, this.horizon_matrix, this.materials.horizon);
         // this.shapes.ground.draw(context, program_state, this.ground_matrix, this.materials.ground);
+
+        let mine_transform = Mat4.identity()
+        
+        let spawnDistance = 10
+
+        //need to make z increase on each iteration
+        for(let i = 0; i < this.mines.length; i++){
+            
+            mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], 0, this.mines[i][1] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
+            this.mines[i][1] += 0.1
+            this.shapes.sphere.draw(context, program_state, mine_transform, this.materials.mines)
+
+            //check if any have passed the camera
+            if (this.mines[i][1] > 20){
+                //re-initalize the mine (delete and spawn new mine)
+                this.mines[i][0] = (Math.random() * 2 - 1) * 10
+                this.mines[i][1] = -1 * Math.random() * 10
+            }
+             
+        }
 
     }
 }
