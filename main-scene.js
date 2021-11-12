@@ -34,13 +34,7 @@ Object.assign(defs,
     {Surfaces_Demo},
     {Text_Demo},
     {Transforms_Sandbox},
-<<<<<<< Updated upstream
     {minefield}
-=======
-    {minefield},
-     {StartScreen}
-
->>>>>>> Stashed changes
 );
 
 // ******************** End extra step
