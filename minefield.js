@@ -20,7 +20,7 @@ export class minefield extends Scene {
         const row_operation2 = (s, p) => p ? Mat4.translation(0, .2, 0).times(p.to4(1)).to3()
             : initial_corner_point2;
         const column_operation2 = (t, p) => Mat4.translation(.2, 0, 0).times(p.to4(1)).to3();
-        
+        this.gameStart = false
         this.shapes = {
             torus: new defs.Torus(15, 15),
             torus2: new defs.Torus(3, 15),
@@ -39,7 +39,11 @@ export class minefield extends Scene {
                 {ambient: .4, specularity: 1, diffusivity: .6, color: hex_color("#000000")}),
             // horizon: new Material(new defs.Phong_Shader(),
             //     {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#ADD8E6")}),
-            horizon: new Material(bump, {ambient: 1, texture: new Texture("assets/underwater.jpg")}),
+           
+          
+          
+                       horizon: new Material(bump, {ambient: 1, texture: new Texture("assets/underwater.jpg")}),
+            
             // ground: new Material(new defs.Phong_Shader(),
             //     {ambient: 1, specularity: 1, diffusivity: .6, color: hex_color("#ffffff")}),
             // ground: new Material(bump, {ambient: 1, texture: new Texture("assets/sand.jpg")}),
@@ -89,25 +93,66 @@ export class minefield extends Scene {
         this.paused = !this.paused;
     }
 
-    make_control_panel() {
+     make_control_panel2() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
+        this.key_triggered_button("Start Game", ["S"], () => this.start_game());
+
+      //this.key_triggered_button("How to Play", ["i"], () => this.help());
+        this.new_line();
+        this.new_line();
+       
+        this.live_string(box => {
+            box.textContent = "Welcome to Minefield! You are an underwater explorer avoiding obstacles and trying to swim to safety! To move, use the buttons shown or click them on screen. The longer you survive the more points you get!"
+        });
+        
+
+    }
+
+    make_control_panel() {
+        if(window.name != "started!"){
+
+
+        this.make_control_panel2()
+
+        }
+        else
+
+        {
+
+   this.key_triggered_button("left", ["a"], () => this.move_left());
         this.key_triggered_button("right", ["d"], () => this.move_right());
-        this.key_triggered_button("left", ["a"], () => this.move_left());
         this.key_triggered_button("fire", ["f"], () => this.fire_bullet());
         this.key_triggered_button("paused", ["p"], () => this.pause());
         this.live_string(box => {
-            box.textContent = "Your score is " + this.score + " so far"
+            box.textContent = "Your score is " + this.score + " so far. The current high score is " + window.highscore
         });
+        }
+        
+
+     
     }
 
+    start_game() {
+            window.location.reload();
+             window.name = "started!"
+             this.gameStart = true
+    }
+    
+
     display(context, program_state) {
+//          if(this.gameStart){
+        
+//         this.make_control_panel2()
+
+//         }
         // display():  Called once per frame of animation.
         // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
         this.context = context;
         this.program_state = program_state;
         let r = 5;
         if (!context.scratchpad.controls) {
-            // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+           // this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
+
             // Define the global camera and projection matrices, which are stored in program_state.
             program_state.set_camera(this.initial_camera_location);
         }
@@ -119,7 +164,7 @@ export class minefield extends Scene {
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 3 and 4)
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         let model_transform = this.player_matrix;
-        var horizon_transform = Mat4.identity().times(Mat4.scale(150, 50, 1)).times(Mat4.translation(0,0,-20));
+        var horizon_transform = Mat4.identity().times(Mat4.scale(11, 10, 0)).times(Mat4.translation(0,0,-20));
         // this.ground_matrix = Mat4.identity().times(Mat4.scale(18, 5, 1)).times(Mat4.translation(0,-2,-10).times(Mat4.rotation(3,1,0,0)));
 
         // if(t % 10 == 0){
@@ -164,7 +209,9 @@ export class minefield extends Scene {
                 }
                 
             }
+            if(window.name == "started!"){
             this.score += 100;
+            }
         }
         else{
             for(let i = 0; i < this.bullets.length; i++){
