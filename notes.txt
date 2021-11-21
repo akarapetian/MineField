@@ -1,0 +1,4 @@
+General Notes:
+- background sway?
+- delete objects after certain threshold 
+- don't let character go off screen
