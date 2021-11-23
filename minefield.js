@@ -10,6 +10,23 @@ export class minefield extends Scene {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
 
+        this.mines = [] //store the x and z location of each mine 
+
+        let x = 0
+        let z = 0
+        
+        //initalize 10 randomly placed mines 
+        //in future we need to guanantee non-collision between mines that spawn
+        for(let i = 0; i < 10; i++){
+            x = (Math.random() * 2 - 1) * 10
+            z = -1 * Math.random() * 10
+
+            this.mines.push([x, z])
+        }
+
+
+//         this.spawnDistance = 10
+
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         const initial_corner_point = vec3(-50, 0, -50);
         const row_operation = (s, p) => p ? Mat4.translation(0, .2, 0).times(p.to4(1)).to3()
@@ -27,6 +44,7 @@ export class minefield extends Scene {
             sphere: new defs.Subdivision_Sphere(4),
             circle: new defs.Regular_2D_Polygon(1, 15),
             cylinder: new Shape_From_File("assets/sub.obj"),
+            mine : new Shape_From_File("assets/boatmine.obj"),
             cube: new defs.Cube(3,3),
             horizon: new defs.Grid_Patch(100, 500, row_operation, column_operation),
             ground: new defs.Grid_Patch(100, 300, row_operation2, column_operation2)
@@ -59,8 +77,8 @@ export class minefield extends Scene {
         this.program_state = null;
         this.bullets = []
         this.mines = []
-        let x = 0
-        let z = 0
+        x = 0
+        z = 0
         this.score = 0
         this.paused = false
 
@@ -199,7 +217,7 @@ export class minefield extends Scene {
                 
                 mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], 0, this.mines[i][1] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
                 this.mines[i][1] += 0.1
-                this.shapes.sphere.draw(context, program_state, mine_transform, this.materials.mines)
+                this.shapes.mine.draw(context, program_state, mine_transform, this.materials.mines)
 
                 //check if any have passed the camera
                 if (this.mines[i][1] > 20){
@@ -222,7 +240,7 @@ export class minefield extends Scene {
                 let spawnDistance = 10
                 mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], 0, this.mines[i][1] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
                 mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], 0, this.mines[i][1] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
-                this.shapes.sphere.draw(context, program_state, mine_transform, this.materials.mines)
+                this.shapes.mine.draw(context, program_state, mine_transform, this.materials.mines)
             }
         }
 
