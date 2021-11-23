@@ -70,6 +70,8 @@ export class minefield extends Scene {
         }
         this.score = 0
         this.paused = false
+        this.next_time = 3;
+        this.speedup = 0.1;
 
         
         //initalize 10 randomly placed mines 
@@ -134,6 +136,12 @@ export class minefield extends Scene {
 
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 3 and 4)
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+
+        if(t > this.next_time){
+            this.speedup = this.speedup + 0.03;
+            this.next_time += 6;
+        }
+
         let model_transform = this.player_matrix;
         var horizon_transform = Mat4.identity().times(Mat4.scale(150, 50, 1)).times(Mat4.translation(0,0,-20));
         // this.ground_matrix = Mat4.identity().times(Mat4.scale(18, 5, 1)).times(Mat4.translation(0,-2,-10).times(Mat4.rotation(3,1,0,0)));
@@ -164,7 +172,7 @@ export class minefield extends Scene {
             for(let i = 0; i < this.mines.length; i++){
                 
                 mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], 0, this.mines[i][1] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
-                this.mines[i][1] += 0.1
+                this.mines[i][1] += this.speedup;
                 this.shapes.mine.draw(context, program_state, mine_transform, this.materials.mines)
 
                 //check if any have passed the camera
