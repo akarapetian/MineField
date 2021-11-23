@@ -44,6 +44,7 @@ export class minefield extends Scene {
             sphere: new defs.Subdivision_Sphere(4),
             circle: new defs.Regular_2D_Polygon(1, 15),
             cylinder: new Shape_From_File("assets/sub.obj"),
+            mine : new Shape_From_File("assets/boatmine.obj"),
             cube: new defs.Cube(3,3),
             horizon: new defs.Grid_Patch(100, 500, row_operation, column_operation),
             ground: new defs.Grid_Patch(100, 300, row_operation2, column_operation2)
@@ -76,8 +77,8 @@ export class minefield extends Scene {
         this.program_state = null;
         this.bullets = []
         this.mines = []
-        let x = 0
-        let z = 0
+        x = 0
+        z = 0
         this.score = 0
         this.paused = false
 
@@ -216,7 +217,7 @@ export class minefield extends Scene {
                 
                 mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], 0, this.mines[i][1] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
                 this.mines[i][1] += 0.1
-                this.shapes.sphere.draw(context, program_state, mine_transform, this.materials.mines)
+                this.shapes.mine.draw(context, program_state, mine_transform, this.materials.mines)
 
                 //check if any have passed the camera
                 if (this.mines[i][1] > 20){
@@ -239,7 +240,7 @@ export class minefield extends Scene {
                 let spawnDistance = 10
                 mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], 0, this.mines[i][1] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
                 mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], 0, this.mines[i][1] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
-                this.shapes.sphere.draw(context, program_state, mine_transform, this.materials.mines)
+                this.shapes.mine.draw(context, program_state, mine_transform, this.materials.mines)
             }
         }
 
