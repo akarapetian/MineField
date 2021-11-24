@@ -56,6 +56,9 @@ export class minefield extends Scene {
         this.program_state = null;
         this.bullets = []
         this.mines = [] //store the x and z location of each mine 
+        this.mines_y = []
+        this.player_y = 0;
+        this.flag_3d = true;
 
         let x = 0
         let y = 0
@@ -69,6 +72,7 @@ export class minefield extends Scene {
             z = -1 * Math.random() * 10
 
             this.mines.push([x, y, z])
+            this.mines_y.push(y)
         }
         this.score = 0
         this.paused = false
@@ -91,16 +95,18 @@ export class minefield extends Scene {
     }
 
     move_up() {
-        if (!this.paused) {
+        if (!this.paused && this.flag_3d) {
             this.player_matrix = this.player_matrix.times(Mat4.translation(0,0.2,0));
         }
+        this.player_y += 0.2;
             // this.background_matrix = this.background_matrix.times(Mat4.rotation(0.2,0.2,0,0));
     }
 
     move_down() {
-        if (!this.paused) {
+        if (!this.paused && this.flag_3d) {
             this.player_matrix = this.player_matrix.times(Mat4.translation(0,-0.2,0));
         }
+        this.player_y -= 0.2;
     }
 
     fire_bullet() {
@@ -111,6 +117,24 @@ export class minefield extends Scene {
         this.paused = !this.paused;
     }
 
+    toggle_3d() {
+        this.flag_3d = !this.flag_3d
+        if(this.flag_3d) {
+            for(let i = 0; i < this.mines.length; i++){
+                this.mines[i][1] = this.mines_y[i];
+            }
+            this.player_matrix[1][3] = this.player_y;
+
+        }
+
+        else{
+            for(let i = 0; i < this.mines.length; i++){
+                this.mines[i][1] = 0;
+            }
+            this.player_matrix[1][3] = 0;
+        }
+    }
+
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
         this.key_triggered_button("right", ["d"], () => this.move_right());
@@ -119,6 +143,8 @@ export class minefield extends Scene {
         this.key_triggered_button("down", ["s"], () => this.move_down());
         this.key_triggered_button("fire", ["f"], () => this.fire_bullet());
         this.key_triggered_button("paused", ["p"], () => this.pause());
+        this.key_triggered_button("toggle 3d", ["t"], () => this.toggle_3d());
+
         this.live_string(box => {
             box.textContent = "Your score is " + this.score + " so far"
         });
@@ -186,8 +212,14 @@ export class minefield extends Scene {
                 if (this.mines[i][2] > 20){
                     //re-initalize the mine (delete and spawn new mine)
                     this.mines[i][0] = (Math.random() * 2 - 1) * 10
-                    this.mines[i][1] = (Math.random() * 2 - 1) * 10
+                    if(this.flag_3d) {
+                        this.mines[i][1] = (Math.random() * 2 - 1) * 10
+                    }
+                    else {
+                        this.mines[i][1] = 0
+                    }
                     this.mines[i][2] = -1 * Math.random() * 10
+                    this.mines_y[i] = this.mines[i][1]
                     
                 }
                 
