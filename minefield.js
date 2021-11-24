@@ -125,6 +125,15 @@ export class minefield extends Scene {
             }
             this.player_matrix[1][3] = this.player_y;
 
+            for(let i = 0; i < 30; i++){
+                let x = (Math.random() * 2 - 1) * 10
+                let y = (Math.random() * 2 - 1) * 10
+                let z = -1 * Math.random() * 10
+    
+                this.mines.push([x, y, z])
+                this.mines_y.push(y)
+            }
+
         }
 
         else{
@@ -132,6 +141,8 @@ export class minefield extends Scene {
                 this.mines[i][1] = 0;
             }
             this.player_matrix[1][3] = 0;
+            this.mines = this.mines.slice(0, Math.floor(this.mines.length/2))
+
         }
     }
 
