@@ -78,6 +78,7 @@ export class minefield extends Scene {
         this.paused = false
         this.next_time = 3;
         this.speedup = 0.1;
+        this.scores = [];
 
     }
 
@@ -117,6 +118,32 @@ export class minefield extends Scene {
         this.paused = !this.paused;
     }
 
+    restart() {
+        this.scores.push(this.score);
+        let temp = parseInt(this.score);
+        this.live_string(box => {
+            box.textContent = temp;
+        });
+        this.new_line();
+        this.score = 0;
+        this.bullets = [];
+        this.mines = [];
+        this.mines_y = [];
+        this.player_matrix = Mat4.identity().times(Mat4.scale(2,2,2)).times(Mat4.rotation(Math.PI,0,1,0)).times(Mat4.translation(0,0,-3));
+        this.flag_3d = true;
+        this.paused = false
+        this.next_time = 3;
+        this.speedup = 0.1;
+        for(let i = 0; i < 60; i++){
+            let x = (Math.random() * 2 - 1) * 10
+            let y = (Math.random() * 2 - 1) * 10
+            let z = -1 * Math.random() * 10
+
+            this.mines.push([x, y, z])
+            this.mines_y.push(y)
+        }
+    }
+
     toggle_3d() {
         this.flag_3d = !this.flag_3d
         if(this.flag_3d) {
@@ -154,11 +181,17 @@ export class minefield extends Scene {
         this.key_triggered_button("down", ["s"], () => this.move_down());
         this.key_triggered_button("fire", ["f"], () => this.fire_bullet());
         this.key_triggered_button("paused", ["p"], () => this.pause());
+        this.key_triggered_button("restart", ["r"], () => this.restart());
         this.key_triggered_button("toggle 3d", ["t"], () => this.toggle_3d());
-
+        this.new_line();
         this.live_string(box => {
             box.textContent = "Your score is " + this.score + " so far"
         });
+        this.new_line();
+        this.live_string(box => {
+            box.textContent = "Previous Scores: "
+        });
+        this.new_line();
     }
 
     display(context, program_state) {
