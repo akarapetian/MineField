@@ -5,6 +5,8 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
 } = tiny;
 
+var scores = []
+
 export class minefield extends Scene {
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
@@ -75,10 +77,10 @@ export class minefield extends Scene {
             this.mines_y.push(y)
         }
         this.score = 0
+        
         this.paused = false
         this.next_time = 3;
         this.speedup = 0.1;
-        this.scores = [];
 
     }
 
@@ -119,31 +121,39 @@ export class minefield extends Scene {
     }
 
     restart() {
-        this.scores.push(this.score);
-        let temp = parseInt(this.score);
-        this.live_string(box => {
-            box.textContent = temp;
-        });
-        this.new_line();
-        this.score = 0;
-        this.bullets = [];
-        this.mines = [];
-        this.mines_y = [];
-        this.player_matrix = Mat4.identity().times(Mat4.scale(2,2,2)).times(Mat4.rotation(Math.PI,0,1,0)).times(Mat4.translation(0,0,-3));
-        this.flag_3d = true;
-        this.paused = false
-        this.next_time = 3;
-        this.speedup = 0.1;
-        for(let i = 0; i < 60; i++){
-            let x = (Math.random() * 2 - 1) * 10
-            let y = (Math.random() * 2 - 1) * 10
-            let z = -1 * Math.random() * 10
+    console.log(scores)
+  window.name = "started!"
+             window.location.reload();
+     
+//         this.score = 0;
+//         this.bullets = [];
+//         this.mines = [];
+//         this.mines_y = [];
+//         this.player_matrix = Mat4.identity().times(Mat4.scale(2,2,2)).times(Mat4.rotation(Math.PI,0,1,0)).times(Mat4.translation(0,0,-3));
+//         this.flag_3d = true;
+//         this.paused = false
+//         this.next_time = 3;
+//         this.speedup = 0.1;
+//         for(let i = 0; i < 60; i++){
+//             let x = (Math.random() * 2 - 1) * 10
+//             let y = (Math.random() * 2 - 1) * 10
+//             let z = -1 * Math.random() * 10
 
-            this.mines.push([x, y, z])
-            this.mines_y.push(y)
-        }
+//             this.mines.push([x, y, z])
+//             this.mines_y.push(y)
+//         }
     }
 
+
+end_game(){
+
+
+
+console.log(scores)
+ window.name = "lost!"
+ window.location.reload();
+
+}
     toggle_3d() {
         this.flag_3d = !this.flag_3d
         if(this.flag_3d) {
@@ -175,8 +185,66 @@ export class minefield extends Scene {
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("right", ["d"], () => this.move_right());
-        this.key_triggered_button("left", ["a"], () => this.move_left());
+    
+    }
+
+  make_control_panel2() {
+         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
+         this.key_triggered_button("Start Game", ["S"], () => this.start_game());
+
+       //this.key_triggered_button("How to Play", ["i"], () => this.help());
+         this.new_line();
+         this.new_line();
+
+         this.live_string(box => {
+             box.textContent = "Welcome to Minefield! You are an underwater explorer avoiding obstacles and trying to swim to safety! To move, use the buttons shown or click them on screen. The longer you survive the more points you get!"
+         });
+
+
+     }
+
+      make_control_panel3() {
+         this.live_string(box => {
+            box.textContent = "You lost! Here are your high scores, press the restart button to try again!"
+        });
+
+        this.new_line();
+        this.new_line();
+         var buildString = "Previous scores:" + "\n"
+
+         for(let i = 0; i < scores; i++){
+            buildString = buildString + scores + "\n"
+        }
+
+        this.live_string(box => {
+            box.textContent = buildString
+        });
+        this.new_line();
+        this.key_triggered_button("restart", ["r"], () => this.restart());
+
+
+     }
+
+  start_game() {
+         window.name = "started!"
+             window.location.reload();
+           
+
+     }
+
+
+
+      make_control_panel() {
+          console.log(window.name);
+          if(window.name == "lost!"){
+
+
+         this.make_control_panel3()
+
+         }
+         else if(window.name == "started!"){
+     this.key_triggered_button("left", ["a"], () => this.move_left());
+    this.key_triggered_button("right", ["d"], () => this.move_right());
         this.key_triggered_button("up", ["w"], () => this.move_up());
         this.key_triggered_button("down", ["s"], () => this.move_down());
         this.key_triggered_button("fire", ["f"], () => this.fire_bullet());
@@ -188,11 +256,28 @@ export class minefield extends Scene {
             box.textContent = "Your score is " + this.score + " so far"
         });
         this.new_line();
-        this.live_string(box => {
-            box.textContent = "Previous Scores: "
-        });
-        this.new_line();
-    }
+      
+
+         }
+         else if(window.name != "started!" && window.name != "lost!" )
+
+         {
+   this.make_control_panel2()
+
+
+
+ 
+
+
+
+
+         }
+
+
+
+
+
+     }
 
     display(context, program_state) {
         // display():  Called once per frame of animation.
@@ -268,7 +353,11 @@ export class minefield extends Scene {
                 }
                 
             }
-            this.score += 100;
+            if(window.name != "lost!"){
+                this.score += 100;
+
+            }
+        
             var sub_x = this.player_matrix[0][3];
             var sub_y = this.player_matrix[1][3];
             var sub_z = this.player_matrix[2][3];
@@ -279,6 +368,10 @@ export class minefield extends Scene {
                 var mines_z = this.mines[i][2];
                 if(Math.abs(sub_x-mines_x) <= 0.7 && Math.abs(sub_y-mines_y) <= 0.7 && Math.abs((sub_z+15)-mines_z) <= 5){
                     this.paused = true;
+                    if(window.name == "started!"){
+                       scores.push(this.score)
+                     this.end_game()
+                    }
                     console.log('end');
                     i = this.mines.length;
                     break;
@@ -291,7 +384,10 @@ export class minefield extends Scene {
                     if(Math.abs(bullet_x-mines_x) <= 0.7 && Math.abs(bullet_y-mines_y) <= 0.7 && Math.abs((bullet_z+15)-mines_z) <= 5){
                         //put both out of sight
                         //swap with end for O(1) deletions if too slow 
+
+                     
                         console.log("collision!")
+                          
                         // this.bullets.splice(j, 1);
                         // this.mines.splice(i, 1);
                         // break;
