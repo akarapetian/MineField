@@ -175,6 +175,8 @@ export class minefield extends Scene {
     }
 
     fire_bullet() {
+        var snd = new Audio("assets/laserShoot.wav"); // buffers automatically when created
+        snd.play();
         this.bullets.push(this.player_matrix.times(Mat4.scale(0.1,0.1,0.1)));
     }
 
@@ -209,7 +211,7 @@ export class minefield extends Scene {
 
 end_game(){
 
-    
+   
 
 if(localStorage.getItem("scores") === null){
 
@@ -408,6 +410,8 @@ var storedScores = JSON.parse(localStorage.getItem("scores"));
         let model_transform = this.player_matrix;
         if(window.name === "started!"){
         var horizon_transform = Mat4.identity().times(Mat4.scale(150, 50, 1)).times(Mat4.translation(0,0,-20));
+//            var snd = new Audio("assets/bg.mp3"); // buffers automatically when created
+//         snd.play();
         }
         else
 
@@ -500,7 +504,9 @@ var storedScores = JSON.parse(localStorage.getItem("scores"));
                     if(Math.abs(bullet_x-mines_x) <= 0.7 && Math.abs(bullet_y-mines_y) <= 0.7 && Math.abs((bullet_z+15)-mines_z) <= 5){
                         //put both out of sight
                         //swap with end for O(1) deletions if too slow 
-
+                            
+                               var snd = new Audio("assets/explosion.wav"); // buffers automatically when created
+                            snd.play();
                      
                         console.log("collision!")
                           
