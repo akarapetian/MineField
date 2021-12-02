@@ -148,7 +148,7 @@ end_game(){
 
     
 
-if(localStorage.getItem("scores") === undefined){
+if(localStorage.getItem("scores") === null){
 
 var storedScores   = []
 
@@ -226,6 +226,9 @@ localStorage.setItem("scores", JSON.stringify(storedScores));
         });
     
 var storedScores = JSON.parse(localStorage.getItem("scores"));
+
+
+
     var finalScores = storedScores.sort().reverse()
    
         this.new_line();
@@ -242,7 +245,7 @@ var storedScores = JSON.parse(localStorage.getItem("scores"));
 
          for(let i = 0; i <= finalScores.length-1 ; i++){
                   this.live_string(box => {
-            box.textContent = i.toString() + ": " + finalScores[i]
+            box.textContent = (i+1).toString() + ": " + finalScores[i]
 
                     });
                        this.new_line();
