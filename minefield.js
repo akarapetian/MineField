@@ -37,12 +37,36 @@ export class minefield extends Scene {
 
         // *** Materials
         const bump = new defs.Fake_Bump_Map(1);
-        this.materials = {
+     
+
+            if(window.name == "lost!"){
+
+             this.materials = {
+            test: new Material(new defs.Phong_Shader(),
+                {ambient: .4, specularity: 1, diffusivity: .6, color: hex_color("#000000")}),
+            // horizon: new Material(new defs.Phong_Shader(),
+            //     {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#ADD8E6")}),
+            horizon: new Material(bump, {ambient: 1, texture: new Texture("assets/underwaterEnd.jpg")}),
+
+       
+
+            // ground: new Material(new defs.Phong_Shader(),
+            //     {ambient: 1, specularity: 1, diffusivity: .6, color: hex_color("#ffffff")}),
+            // ground: new Material(bump, {ambient: 1, texture: new Texture("assets/sand.jpg")}),
+            
+        }
+
+         }
+         else if(window.name == "started!"){
+   this.materials = {
             test: new Material(new defs.Phong_Shader(),
                 {ambient: .4, specularity: 1, diffusivity: .6, color: hex_color("#000000")}),
             // horizon: new Material(new defs.Phong_Shader(),
             //     {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#ADD8E6")}),
             horizon: new Material(bump, {ambient: 1, texture: new Texture("assets/underwater.jpg")}),
+
+       
+
             // ground: new Material(new defs.Phong_Shader(),
             //     {ambient: 1, specularity: 1, diffusivity: .6, color: hex_color("#ffffff")}),
             // ground: new Material(bump, {ambient: 1, texture: new Texture("assets/sand.jpg")}),
@@ -50,8 +74,47 @@ export class minefield extends Scene {
                 {ambient: 1.0, specularity: 1, diffusivity: .6, color: hex_color("#808080")}),
         }
 
+         }
+         else if(window.name != "started!" && window.name != "lost!" )
+
+         {
+ 
+
+   this.materials = {
+            test: new Material(new defs.Phong_Shader(),
+                {ambient: .4, specularity: 1, diffusivity: .6, color: hex_color("#000000")}),
+            // horizon: new Material(new defs.Phong_Shader(),
+            //     {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#ADD8E6")}),
+            horizon: new Material(bump, {ambient: 1, texture: new Texture("assets/underwaterStart.jpg")}),
+
+       
+
+            // ground: new Material(new defs.Phong_Shader(),
+            //     {ambient: 1, specularity: 1, diffusivity: .6, color: hex_color("#ffffff")}),
+            // ground: new Material(bump, {ambient: 1, texture: new Texture("assets/sand.jpg")}),
+            mines: new Material(new defs.Phong_Shader(),
+                {ambient: 1.0, specularity: 1, diffusivity: .6, color: hex_color("#808080")}),
+        }
+
+
+         }
+
         this.initial_camera_location = Mat4.look_at(vec3(0, 2, 13), vec3(0, 0, 0), vec3(0, 1, 0));
+
         this.player_matrix = Mat4.identity().times(Mat4.scale(2,2,2)).times(Mat4.rotation(Math.PI,0,1,0)).times(Mat4.translation(0,0,-3));
+        if(window.name == "lost!"){
+
+        this.move_right()
+          this.move_right()
+            this.move_right()
+              this.move_right()
+                this.move_right()
+                  this.move_right()
+                    this.move_right()
+                      this.move_right()
+                        this.move_right()
+
+        }
         this.horizon_matrix = Mat4.identity();
         this.ground_matrix = Mat4.identity();
         this.context = null;
@@ -221,6 +284,9 @@ localStorage.setItem("scores", JSON.stringify(storedScores));
      }
 
       make_control_panel3() { 
+
+
+
          this.live_string(box => {
             box.textContent = "You lost! Here are your high scores, press the restart button to try again!"
         });
@@ -272,11 +338,12 @@ var storedScores = JSON.parse(localStorage.getItem("scores"));
           console.log(window.name);
           if(window.name == "lost!"){
 
-
+//End screen
          this.make_control_panel3()
 
          }
          else if(window.name == "started!"){
+             //game screen
      this.key_triggered_button("left", ["a"], () => this.move_left());
     this.key_triggered_button("right", ["d"], () => this.move_right());
         this.key_triggered_button("up", ["w"], () => this.move_up());
@@ -298,7 +365,7 @@ var storedScores = JSON.parse(localStorage.getItem("scores"));
          {
    this.make_control_panel2()
 
-
+//start screen
 
  
 
@@ -339,7 +406,19 @@ var storedScores = JSON.parse(localStorage.getItem("scores"));
         }
 
         let model_transform = this.player_matrix;
+        if(window.name === "started!"){
         var horizon_transform = Mat4.identity().times(Mat4.scale(150, 50, 1)).times(Mat4.translation(0,0,-20));
+        }
+        else
+
+        {
+
+                var horizon_transform = Mat4.identity().times(Mat4.scale(11, 10, 0)).times(Mat4.translation(0,0,-20));
+
+
+        }
+
+
         // this.ground_matrix = Mat4.identity().times(Mat4.scale(18, 5, 1)).times(Mat4.translation(0,-2,-10).times(Mat4.rotation(3,1,0,0)));
 
         //lighting
@@ -391,10 +470,13 @@ var storedScores = JSON.parse(localStorage.getItem("scores"));
                 this.score += 100;
 
             }
-        
+            
+
             var sub_x = this.player_matrix[0][3];
             var sub_y = this.player_matrix[1][3];
             var sub_z = this.player_matrix[2][3];
+
+           
 
             for(let i = 0; i < this.mines.length; i++){
                 var mines_x = this.mines[i][0];
