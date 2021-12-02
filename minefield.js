@@ -195,6 +195,7 @@ export class minefield extends Scene {
         this.live_string(box => {
             box.textContent = "Previous Scores: "
         });
+        this.new_line();
         this.live_string(box => {
             box.textContent = this.scores.join(", ");
         });
