@@ -56,11 +56,11 @@ export class minefield extends Scene {
         this.program_state = null;
         this.bullets = []
         this.mines = [] //store the x and z location of each mine 
-        this.mines_y = []
+        this.mines_y = [] //make sure to update this array
         this.player_y = 0;
         this.flag_3d = true;
         this.scores = [];
-        this.t = 0;
+        this.t = 0; //constant time, used in speedup
 
         let x = 0
         let y = 0
@@ -78,8 +78,8 @@ export class minefield extends Scene {
         }
         this.score = 0
         this.paused = false
-        this.next_time = 3;
-        this.speedup = 0.1;
+        this.next_time = 3; //time it takes to increase the speed
+        this.speedup = 0.1; //actual speedup amount
 
     }
 
@@ -152,10 +152,12 @@ export class minefield extends Scene {
         this.flag_3d = !this.flag_3d
         if(this.flag_3d) {
             for(let i = 0; i < this.mines.length; i++){
+                //this section makes it 3d, otherwise its set to zero
                 this.mines[i][1] = this.mines_y[i];
             }
             this.player_matrix[1][3] = this.player_y;
 
+            //generate 30 more mines to add to the 3d space
             for(let i = 0; i < 30; i++){
                 let x = (Math.random() * 2 - 1) * 10
                 let y = (Math.random() * 2 - 1) * 10
@@ -168,7 +170,9 @@ export class minefield extends Scene {
         }
 
         else{
+            //handle 2d case
             for(let i = 0; i < this.mines.length; i++){
+                //set y = 0 for all 
                 this.mines[i][1] = 0;
             }
             this.player_matrix[1][3] = 0;
@@ -222,9 +226,10 @@ export class minefield extends Scene {
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         this.t = t;
 
+        //do speedup
         if(t > this.next_time){
             this.speedup = this.speedup + 0.03;
-            this.next_time += 6;
+            this.next_time += 3;
         }
 
         let model_transform = this.player_matrix;
@@ -245,6 +250,7 @@ export class minefield extends Scene {
                 this.shapes.cube.draw(context, program_state, this.bullets[i], this.materials.test);
             }
         
+            //keeps elements based on condition (x[2][3] -> z coordinate (need last index (3)))
             this.bullets = this.bullets.filter(x => x[2][3] > -20);
             // this.shapes.horizon.draw(context, program_state, this.horizon_matrix, this.materials.horizon);
             // this.shapes.ground.draw(context, program_state, this.ground_matrix, this.materials.ground);
@@ -285,6 +291,7 @@ export class minefield extends Scene {
                 var mines_x = this.mines[i][0];
                 var mines_y = this.mines[i][1];
                 var mines_z = this.mines[i][2];
+                //collision between sub and mine
                 if(Math.abs(sub_x-mines_x) <= 0.7 && Math.abs(sub_y-mines_y) <= 0.7 && Math.abs((sub_z+15)-mines_z) <= 5){
                     this.paused = true;
                     console.log('end');
@@ -296,6 +303,7 @@ export class minefield extends Scene {
                     var bullet_y = this.bullets[j][1][3];
                     var bullet_z = this.bullets[j][2][3];
                     //have some tolerance for collision
+                    //collisoin for bullets and mine r
                     if(Math.abs(bullet_x-mines_x) <= 0.7 && Math.abs(bullet_y-mines_y) <= 0.7 && Math.abs((bullet_z+15)-mines_z) <= 5){
                         //put both out of sight
                         //swap with end for O(1) deletions if too slow 
@@ -303,7 +311,7 @@ export class minefield extends Scene {
                         // this.bullets.splice(j, 1);
                         // this.mines.splice(i, 1);
                         // break;
-                        this.bullets[j][2][3] = -21; 
+                        this.bullets[j][2][3] = -21; //put bullet out of range for cleanup later, cant mess with array length
                         this.mines[i][2] = 21;
                         this.shapes.mine.draw(context, program_state, this.bullets[j], this.materials.mines)
                         this.shapes.cube.draw(context, program_state, this.bullets[j], this.materials.test);
