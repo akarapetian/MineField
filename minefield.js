@@ -120,7 +120,12 @@ export class minefield extends Scene {
 
     restart() {
         this.scores.push(this.score);
-        this.scores = this.scores.sort().reverse();
+        this.scores = this.scores.sort(function(a, b) {
+            return a - b;
+          });
+        this.scores = this.scores.reverse();
+        console.log(this.scores);
+        console.log(typeof(this.score))
         let temp = parseInt(this.score);
         this.new_line();
         this.score = 0;
