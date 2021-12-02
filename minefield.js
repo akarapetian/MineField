@@ -60,6 +60,7 @@ export class minefield extends Scene {
         this.player_y = 0;
         this.flag_3d = true;
         this.scores = [];
+        this.t = 0;
 
         let x = 0
         let y = 0
@@ -135,7 +136,7 @@ export class minefield extends Scene {
         this.player_matrix = Mat4.identity().times(Mat4.scale(2,2,2)).times(Mat4.rotation(Math.PI,0,1,0)).times(Mat4.translation(0,0,-3));
         this.flag_3d = true;
         this.paused = false
-        this.next_time = 3;
+        this.next_time = this.t + 3;
         this.speedup = 0.1;
         for(let i = 0; i < 60; i++){
             let x = (Math.random() * 2 - 1) * 10
@@ -218,6 +219,7 @@ export class minefield extends Scene {
 
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 3 and 4)
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+        this.t = t;
 
         if(t > this.next_time){
             this.speedup = this.speedup + 0.03;
