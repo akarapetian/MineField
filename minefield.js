@@ -59,6 +59,7 @@ export class minefield extends Scene {
         this.mines_y = []
         this.player_y = 0;
         this.flag_3d = true;
+        this.scores = [];
 
         let x = 0
         let y = 0
@@ -78,7 +79,6 @@ export class minefield extends Scene {
         this.paused = false
         this.next_time = 3;
         this.speedup = 0.1;
-        this.scores = [];
 
     }
 
@@ -120,10 +120,8 @@ export class minefield extends Scene {
 
     restart() {
         this.scores.push(this.score);
+        this.scores = this.scores.sort().reverse();
         let temp = parseInt(this.score);
-        this.live_string(box => {
-            box.textContent = temp;
-        });
         this.new_line();
         this.score = 0;
         this.bullets = [];
@@ -191,7 +189,9 @@ export class minefield extends Scene {
         this.live_string(box => {
             box.textContent = "Previous Scores: "
         });
-        this.new_line();
+        this.live_string(box => {
+            box.textContent = this.scores.join(", ");
+        });
     }
 
     display(context, program_state) {
