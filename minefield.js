@@ -5,13 +5,13 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
 } = tiny;
 
-var scores = []
+
 
 export class minefield extends Scene {
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
         super();
-
+    
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         const initial_corner_point = vec3(-50, 0, -50);
         const row_operation = (s, p) => p ? Mat4.translation(0, .2, 0).times(p.to4(1)).to3()
@@ -61,7 +61,6 @@ export class minefield extends Scene {
         this.mines_y = []
         this.player_y = 0;
         this.flag_3d = true;
-
         let x = 0
         let y = 0
         let z = 0
@@ -72,7 +71,6 @@ export class minefield extends Scene {
             x = (Math.random() * 2 - 1) * 10
             y = (Math.random() * 2 - 1) * 10
             z = -1 * Math.random() * 10
-
             this.mines.push([x, y, z])
             this.mines_y.push(y)
         }
@@ -81,6 +79,7 @@ export class minefield extends Scene {
         this.paused = false
         this.next_time = 3;
         this.speedup = 0.1;
+       
 
     }
 
@@ -121,7 +120,7 @@ export class minefield extends Scene {
     }
 
     restart() {
-    console.log(scores)
+   
   window.name = "started!"
              window.location.reload();
      
@@ -147,9 +146,27 @@ export class minefield extends Scene {
 
 end_game(){
 
+    
+
+if(localStorage.getItem("scores") === undefined){
+
+var storedScores   = []
+
+}
+else
+
+{
+
+    var storedScores = JSON.parse(localStorage.getItem("scores"));
+
+}
 
 
-console.log(scores)
+storedScores.push(this.score)
+console.log(storedScores)
+localStorage.setItem("scores", JSON.stringify(storedScores));
+
+
  window.name = "lost!"
  window.location.reload();
 
@@ -203,23 +220,37 @@ console.log(scores)
 
      }
 
-      make_control_panel3() {
+      make_control_panel3() { 
          this.live_string(box => {
             box.textContent = "You lost! Here are your high scores, press the restart button to try again!"
         });
-
+    
+var storedScores = JSON.parse(localStorage.getItem("scores"));
+    var finalScores = storedScores.sort().reverse()
+   
         this.new_line();
         this.new_line();
-         var buildString = "Previous scores:" + "\n"
+         var buildString = "High scores:" + "\n"
 
-         for(let i = 0; i < scores; i++){
-            buildString = buildString + scores + "\n"
+             this.live_string(box => {
+            box.textContent = "High Scores:"
+
+                    });
+
+                       this.new_line();
+
+
+         for(let i = 0; i <= finalScores.length-1 ; i++){
+                  this.live_string(box => {
+            box.textContent = i.toString() + ": " + finalScores[i]
+
+                    });
+                       this.new_line();
+
         }
-
-        this.live_string(box => {
-            box.textContent = buildString
-        });
-        this.new_line();
+    
+    this.new_line();
+     
         this.key_triggered_button("restart", ["r"], () => this.restart());
 
 
@@ -369,7 +400,7 @@ console.log(scores)
                 if(Math.abs(sub_x-mines_x) <= 0.7 && Math.abs(sub_y-mines_y) <= 0.7 && Math.abs((sub_z+15)-mines_z) <= 5){
                     this.paused = true;
                     if(window.name == "started!"){
-                       scores.push(this.score)
+                     
                      this.end_game()
                     }
                     console.log('end');

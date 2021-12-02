@@ -43,6 +43,7 @@ Object.assign(defs,
 
 const Main_Scene = minefield;
 const Additional_Scenes = [];
-window.highscores = new Array();
+
+
 
 export {Main_Scene, Additional_Scenes, Canvas_Widget, Code_Widget, Text_Widget, defs}
