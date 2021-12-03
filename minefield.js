@@ -88,13 +88,13 @@ export class minefield extends Scene {
 
         //initalize wildlife 
         for(let i = 0; i < 20; i++){
-            x = (Math.random() * 5 + 20)
-            if(Math.random < 0.5){
+            x = (Math.random() * 5) + 100
+            if(Math.random() < 0.5){
             	x *= -1
             }
-            y = (Math.random() * 2 - 1) * 10
+            y = (Math.random() * 2 - 1)
             z = -1 * ((Math.random() * 1000) + this.spawnDistance)
-            s = Math.random() - 0.5
+            s = -1 * Math.random() * 2 * Math.sign(x)
             t = Math.floor(Math.random() * 2)//type of wildlife (0-2)
             this.wildlife.push([x, y, z, s, t])
             this.wildlife_y.push(y)
@@ -193,15 +193,17 @@ export class minefield extends Scene {
 
         //initalize wildlife 
         for(let i = 0; i < 20; i++){
-            x = (Math.random() * 5 + 20)
-            if(Math.random < 0.5){
+            x = (Math.random() * 5) + 100
+            if(Math.random() < 0.5){
             	x *= -1
             }
             y = (Math.random() * 2 - 1) * 10
             z = -1 * ((Math.random() * 1000) + this.spawnDistance)
 
+            
 
-            s = Math.random() - 0.5
+
+            s = -1 * Math.random() * 2 * Math.sign(x)
             t = Math.floor(Math.random() * 2)//type of wildlife (0-2)
 
             this.wildlife.push([x, y, z, s, t])
@@ -420,9 +422,6 @@ export class minefield extends Scene {
 
             let wildlife_transform = Mat4.identity()
 
-            //type of item attribute?
-
-
             //ammo pickup
 			item_transform = Mat4.identity().times(Mat4.translation(this.item[0], this.item[1], this.item[2]))
 			this.shapes.torus.draw(context, program_state, item_transform, this.materials.item)
@@ -445,46 +444,61 @@ export class minefield extends Scene {
             	this.wildlife[b][0] += this.wildlife[b][3]
                 this.wildlife[b][2] += this.speed;
                 
+                //draw the correct type of wildlife
+                //check the type 
                 if(this.wildlife[b][4] == 0){
                 	//fish
-                    wildlife_transform = Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(-50, 0, 0, 1)).times(Mat4.rotation(-90, 0, 1, 0)).times(Mat4.rotation(-90, 1, 0, 0))
-                    if(this.wildlife[b][3] > 0){
+                    if(this.wildlife[b][3] < 0){
                      	//fish is swimming right, need to rotate matrix 180
-                     	wildlife_transform = wildlife_transform.times(Mat4.rotation(180, 0, 1, 0))
+                     	wildlife_transform = Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(-50, 0, 0, 1)).times(Mat4.rotation(-90, 0, 1, 0)).times(Mat4.rotation(-90, 1, 0, 0))
+                    }
+                    else{
+                    	wildlife_transform = Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(180, 0, 1, 0)).times(Mat4.rotation(-50, 0, 0, 1)).times(Mat4.rotation(-90, 0, 1, 0)).times(Mat4.rotation(-90, 1, 0, 0))
                     }
                     this.shapes.fish.draw(context, program_state, wildlife_transform, this.materials.fish)
                 }
                 else if(this.wildlife[b][4] == 1){
                     //shark
-                    wildlife_transform =  Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(-50, 0, 0, 1)).times(Mat4.rotation(-90, 0, 1, 0)).times(Mat4.rotation(-90, 1, 0, 0))
-                    if(this.wildlife[b][3] > 0){
+                    if(this.wildlife[b][3] < 0){
                      	//fish is swimming right, need to rotate matrix 180
-                     	wildlife_transform = wildlife_transform.times(Mat4.rotation(180, 0, 1, 0))
+                     	wildlife_transform =  Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(-50, 0, 0, 1)).times(Mat4.rotation(-90, 0, 1, 0)).times(Mat4.rotation(-90, 1, 0, 0))
+                    }
+                    else{
+                    	wildlife_transform =  Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(180, 0, 1, 0)).times(Mat4.rotation(-50, 0, 0, 1)).times(Mat4.rotation(-90, 0, 1, 0)).times(Mat4.rotation(-90, 1, 0, 0))
                     }
                     this.shapes.shark.draw(context, program_state, wildlife_transform, this.materials.shark)
                 }
                 else if(this.wildlife[b][4] == 2){
                     //whale shark
-                    wildlife_transform = Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(-90, 1, 0, 0))
-                    if(this.wildlife[b][3] > 0){
+                    if(this.wildlife[b][3] < 0){
                      	//fish is swimming right, need to rotate matrix 180
-                     	wildlife_transform = wildlife_transform.times(Mat4.rotation(180, 0, 1, 0))
+                     	wildlife_transform = Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(-90, 1, 0, 0))
+                    }
+                    else{
+                    	wildlife_transform = Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(180, 0, 1, 0)).times(Mat4.rotation(-90, 1, 0, 0))
                     }
                     this.shapes.whale_shark.draw(context, program_state, wildlife_transform, this.materials.whale_shark)
                 }
 
                 //check if any have passed the camera
-                if (this.wildlife[b][2] > 20){
+                if (this.wildlife[b][2] > 20 || this.wildlife[b][0] > 100 || this.wildlife[b][0] < -100 ) {
                     //re-initalize the mine (delete and spawn new mine)
-                    this.wildlife[b][0] = (Math.random() * 2 - 1) * 10
+					this.wildlife[b][0] = (Math.random() * 5) + 100
+					if(Math.random() < 0.5){
+						this.wildlife[b][0] *= -1
+					}
+
                     if(this.flag_3d) {
                         this.wildlife[b][1] = (Math.random() * 2 - 1) * 10
                     }
                     else {
                         this.wildlife[b][1] = 0
                     }
-                    this.wildlife[b][2] = -1 * Math.random() * 10
+                    this.wildlife[b][2] = -1 * ((Math.random() * 1000) + this.spawnDistance)
                     this.wildlife_y[b] = this.wildlife[b][1]
+
+                    this.wildlife[b][3] = -1 * Math.random() * 2 * Math.sign(this.wildlife[b][0])
+                    this.wildlife[b][4] = Math.floor(Math.random() * 2)//type of wildlife (0-2)
                     
                 }
                 
@@ -530,7 +544,6 @@ export class minefield extends Scene {
                     this.paused = true;
                     console.log('end');
                     this.end_game()
-                    i = this.mines.length;
                     break;
                 }  
             }
