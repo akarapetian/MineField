@@ -59,6 +59,10 @@ export class minefield extends Scene {
 			circle: new defs.Regular_2D_Polygon(1, 15),
 			cylinder: new Shape_From_File("assets/sub.obj"),
 			mine: new Shape_From_File("assets/boatmine.obj"),
+			bullet: new Shape_From_File("assets/torpedo.obj"),
+			fish: new Shape_From_File("assets/fish.obj"),
+			shark: new Shape_From_File("assets/shark.obj"),
+			whale_shark : new Shape_From_File("assets/whale_shark.obj"),
 			cube: new defs.Cube(3, 3),
 			horizon: new defs.Grid_Patch(100, 500, row_operation, column_operation),
 			ground: new defs.Grid_Patch(100, 300, row_operation2, column_operation2)
@@ -83,11 +87,11 @@ export class minefield extends Scene {
 			//     {ambient: 1, specularity: 1, diffusivity: .6, color: hex_color("#ffffff")}),
 			// ground: new Material(bump, {ambient: 1, texture: new Texture("assets/sand.jpg")}),
 			mines: new Material(new defs.Phong_Shader(), {
-				ambient: 1.0,
+				ambient: 0.2,
 				specularity: 1,
 				diffusivity: .6,
 				color: hex_color("#808080")
-			}),
+			})
 		}
 
 		this.initial_camera_location = Mat4.look_at(vec3(0, 2, 13), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -97,19 +101,32 @@ export class minefield extends Scene {
 		this.context = null;
 		this.program_state = null;
 		this.bullets = []
-		this.bullet_count = 20
-		this.max_bullets = 20
-		this.mines = [] //store the x and z location of each mine 
+		this.bullet_count = 10
+		this.max_bullets = 10
+		this.mines = [] //store the x y and z location of each mine 
 		this.mines_y = []
 		this.player_y = 0;
 		this.flag_3d = true;
         this.spawnDistance = 40
         this.item = [0, 0, -200] //store x, y, and z of the item that is in the world (limited to 1 item in the world at once)
-
+        this.wildlife = [] //store x y and z location of each fish
+		this.wildlife_y = []
 
 		let x = 0
 		let y = 0
 		let z = 0
+
+        
+
+//         //initialize wildlife
+//         for (let j = 0; j < 10; j++) {
+// 			x = (Math.random() * 2 - 1) * 10
+// 			y = (Math.random() * 2 - 1) * 10
+// 			z = -1 * ((Math.random() * 1000) + this.spawnDistance)
+// 			this.wildlife.push([x, y, z])
+// 			this.wildlife_y.push(y)
+// 		}
+
 
 		//initalize 10 randomly placed mines 
 		//in future we need to guanantee non-collision between mines that spawn
@@ -249,6 +266,8 @@ export class minefield extends Scene {
 			}
 
 		} else {
+
+			//make everything 0
 			for (let i = 0; i < this.mines.length; i++) {
 				this.mines[i][1] = 0;
 			}
@@ -405,7 +424,7 @@ export class minefield extends Scene {
 			//draw bullets 
 			for (let i = 0; i < this.bullets.length; i++) {
 				this.bullets[i] = this.bullets[i].times(Mat4.translation(0, 0, 1));
-				this.shapes.cube.draw(context, program_state, this.bullets[i], this.materials.test);
+				this.shapes.bullet.draw(context, program_state, this.bullets[i], this.materials.test);
 			}
 
             //check bullets distance for deletion
@@ -437,6 +456,9 @@ export class minefield extends Scene {
             //nuclear shield
 
             //more lives?
+
+
+            //update and draw wildlife
 
 
 			let mine_transform = Mat4.identity()
@@ -488,8 +510,6 @@ export class minefield extends Scene {
 			}
 
             
-
-
 			for (let i = 0; i < this.mines.length; i++) {
 				var mines_x = this.mines[i][0];
 				var mines_y = this.mines[i][1];
@@ -527,7 +547,7 @@ export class minefield extends Scene {
 						this.bullets[j][2][3] = -21;
 						this.mines[i][2] = 21;
 						this.shapes.mine.draw(context, program_state, this.bullets[j], this.materials.mines)
-						this.shapes.cube.draw(context, program_state, this.bullets[j], this.materials.test);
+						this.shapes.bullet.draw(context, program_state, this.bullets[j], this.materials.test);
 						break;
 
 					}
@@ -543,7 +563,7 @@ export class minefield extends Scene {
 			this.shapes.torus.draw(context, program_state, item_transform, this.materials.test)
 			
 			for (let i = 0; i < this.bullets.length; i++) {
-				this.shapes.cube.draw(context, program_state, this.bullets[i], this.materials.test);
+				this.shapes.bullet.draw(context, program_state, this.bullets[i], this.materials.test);
 			}
 			for (let i = 0; i < this.mines.length; i++) {
 				let mine_transform = Mat4.identity()
