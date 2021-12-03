@@ -27,10 +27,14 @@ export class minefield extends Scene {
             sphere: new defs.Subdivision_Sphere(4),
             circle: new defs.Regular_2D_Polygon(1, 15),
             cylinder: new Shape_From_File("assets/sub.obj"),
-            mine : new Shape_From_File("assets/boatmine.obj"),
+            mine : new Shape_From_File("assets/mine_2.obj"),
             cube: new defs.Cube(3,3),
             horizon: new defs.Grid_Patch(100, 500, row_operation, column_operation),
-            ground: new defs.Grid_Patch(100, 300, row_operation2, column_operation2)
+            ground: new defs.Grid_Patch(100, 300, row_operation2, column_operation2),
+            bullet: new Shape_From_File("assets/torpedo.obj"),
+			fish: new Shape_From_File("assets/fish.obj"),
+			shark: new Shape_From_File("assets/shark.obj"),
+			whale_shark : new Shape_From_File("assets/whale_shark.obj"),
         };
 
         // *** Materials
@@ -41,11 +45,13 @@ export class minefield extends Scene {
             // horizon: new Material(new defs.Phong_Shader(),
             //     {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#ADD8E6")}),
             horizon: new Material(bump, {ambient: 1, texture: new Texture("assets/underwater.jpg")}),
+            horizon_start: new Material(bump, {ambient: 1, texture: new Texture("assets/underwaterStart.jpeg")}),
+            horizon_end: new Material(bump, {ambient: 1, texture: new Texture("assets/underwaterEnd.jpeg")}),
             // ground: new Material(new defs.Phong_Shader(),
             //     {ambient: 1, specularity: 1, diffusivity: .6, color: hex_color("#ffffff")}),
             // ground: new Material(bump, {ambient: 1, texture: new Texture("assets/sand.jpg")}),
             mines: new Material(new defs.Phong_Shader(),
-                {ambient: 1.0, specularity: 1, diffusivity: .6, color: hex_color("#808080")}),
+                {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#808080")}),
         }
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 2, 13), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -62,6 +68,12 @@ export class minefield extends Scene {
         this.scores = [];
         this.t = 0; //constant time, used in speedup
         this.val = "START";
+        this.bullet_count = 10
+		this.max_bullets = 10
+        this.spawnDistance = 40
+        this.item = [0, 0, -200]
+        this.wildlife = [] //store x y and z location of each fish
+		this.wildlife_y = []
 
         let x = 0
         let y = 0
@@ -69,10 +81,10 @@ export class minefield extends Scene {
 
         //initalize 10 randomly placed mines 
         //in future we need to guanantee non-collision between mines that spawn
-        for(let i = 0; i < 60; i++){
+        for(let i = 0; i < 500; i++){
             x = (Math.random() * 2 - 1) * 10
             y = (Math.random() * 2 - 1) * 10
-            z = -1 * Math.random() * 10
+            z = -1 * ((Math.random() * 1000) + this.spawnDistance)
 
             this.mines.push([x, y, z])
             this.mines_y.push(y)
@@ -80,7 +92,7 @@ export class minefield extends Scene {
         this.score = 0
         this.paused = false
         this.next_time = 3; //time it takes to increase the speed
-        this.speedup = 0.1; //actual speedup amount
+        this.speed = 0.1; //actual speedup amount
 
     }
 
@@ -120,6 +132,10 @@ export class minefield extends Scene {
         this.paused = !this.paused;
     }
 
+    refill_bullets(){
+		this.bullet_count = this.max_bullets
+	}
+
     restart() {
         this.scores.push(this.score);
         this.scores = this.scores.sort(function(a, b) {
@@ -138,7 +154,7 @@ export class minefield extends Scene {
         this.flag_3d = true;
         this.paused = false
         this.next_time = this.t + 3;
-        this.speedup = 0.1;
+        this.speed = 0.1;
         for(let i = 0; i < 60; i++){
             let x = (Math.random() * 2 - 1) * 10
             let y = (Math.random() * 2 - 1) * 10
@@ -147,6 +163,7 @@ export class minefield extends Scene {
             this.mines.push([x, y, z])
             this.mines_y.push(y)
         }
+        this.start_game();
     }
 
     toggle_3d() {
@@ -192,6 +209,10 @@ export class minefield extends Scene {
         while(live_strings.length > 0){
             live_strings[0].parentNode.removeChild(live_strings[0]);
         }
+        var new_lines = document.getElementsByTagName('br');
+        while(new_lines.length > 0){
+            new_lines[0].parentNode.removeChild(new_lines[0]);
+        }
         this.make_control_panel()
     }
 
@@ -204,6 +225,10 @@ export class minefield extends Scene {
         var live_strings = document.getElementsByClassName('live_string');
         while(live_strings.length > 0){
             live_strings[0].parentNode.removeChild(live_strings[0]);
+        }
+        var new_lines = document.getElementsByTagName('br');
+        while(new_lines.length > 0){
+            new_lines[0].parentNode.removeChild(new_lines[0]);
         }
         this.make_control_panel()
     }
@@ -228,9 +253,12 @@ export class minefield extends Scene {
                 box.textContent = "Previous Scores: "
             });
             this.new_line();
-            this.live_string(box => {
-                box.textContent = this.scores.join(", ");
+            for(let i = 0; i <= this.scores.length-1 ; i++){
+                this.live_string(box => {
+                box.textContent = (i+1).toString() + ": " + this.scores[i]
             });
+            this.new_line();
+        }
         }
         
         else if(this.val == "START") {
@@ -267,7 +295,7 @@ export class minefield extends Scene {
         }
 
         program_state.projection_transform = Mat4.perspective(
-            Math.PI / 4, context.width / context.height, .1, 1000);
+            Math.PI / 4, context.width / context.height, .1, 2000);
 
         //bullets -> 4x4 -> x: this.bullets[i][0][3], z: this.bullets[i][2][3]
 
@@ -275,39 +303,49 @@ export class minefield extends Scene {
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         this.t = t;
 
-        if(this.val == "START") {
-            this.paused = true;
-        }
-        else if(this.val == "PLAY") {
-            this.paused = false;
-        }
-
-        //do speedup
-        if(t > this.next_time){
-            this.speedup = this.speedup + 0.03;
-            this.next_time += 3;
-        }
-
         let model_transform = this.player_matrix;
-        var horizon_transform = Mat4.identity().times(Mat4.scale(150, 50, 1)).times(Mat4.translation(0,0,-20));
         // this.ground_matrix = Mat4.identity().times(Mat4.scale(18, 5, 1)).times(Mat4.translation(0,-2,-10).times(Mat4.rotation(3,1,0,0)));
 
         //lighting
         const light_position = vec4(0, 0, 0, 1);
 
         program_state.lights = [new Light(light_position, color(0, 0, 0, 1), 10000)]
-        this.shapes.cube.draw(context, program_state, horizon_transform, this.materials.horizon)
         this.shapes.cylinder.draw(context, program_state, model_transform, this.materials.test)
+
+        if(this.val == "START") {
+            this.paused = true;
+            var horizon_transform = Mat4.identity().times(Mat4.translation(0,0,-50)).times(Mat4.scale(50, 50, 1));
+            this.shapes.cube.draw(context, program_state, horizon_transform, this.materials.horizon_start)
+
+        }
+        else if(this.val == "PLAY") {
+            this.paused = false;
+            //do speedup
+            if(t > this.next_time){
+                this.speed = this.speed + 0.03;
+                this.next_time += 3;
+            }
+            var horizon_transform = Mat4.identity().times(Mat4.scale(200, 130, 1)).times(Mat4.translation(0,0,-200));
+            this.shapes.cube.draw(context, program_state, horizon_transform, this.materials.horizon)
+
+        }
+        else if(this.val == "END") {
+            this.paused = true;
+            var horizon_transform = Mat4.identity();
+            var horizon_transform = Mat4.identity().times(Mat4.translation(0,0,-50)).times(Mat4.scale(50, 50, 1));
+            this.shapes.cube.draw(context, program_state, horizon_transform, this.materials.horizon_end)
+
+        }
 
         if (!this.paused) {
         // this.shapes.cube.draw(context, program_state, this.ground_matrix, this.materials.ground)
             for(let i = 0; i < this.bullets.length; i++){
                 this.bullets[i] = this.bullets[i].times(Mat4.translation(0,0,1));
-                this.shapes.cube.draw(context, program_state, this.bullets[i], this.materials.test);
+                this.shapes.bullet.draw(context, program_state, this.bullets[i], this.materials.test);
             }
         
             //keeps elements based on condition (x[2][3] -> z coordinate (need last index (3)))
-            this.bullets = this.bullets.filter(x => x[2][3] > -20);
+            this.bullets = this.bullets.filter(x => x[2][3] > -200);
             // this.shapes.horizon.draw(context, program_state, this.horizon_matrix, this.materials.horizon);
             // this.shapes.ground.draw(context, program_state, this.ground_matrix, this.materials.ground);
 
@@ -315,11 +353,30 @@ export class minefield extends Scene {
             
             let spawnDistance = 10
 
+            let item_transform = Mat4.identity()
+
+            //type of item attribute?
+
+            //ammo pickup
+			item_transform = Mat4.identity().times(Mat4.translation(this.item[0], this.item[1], this.item[2]))
+			this.shapes.torus.draw(context, program_state, item_transform, this.materials.test)
+			if (this.item[2] > 20) {
+				//re-initalize the item (delete and spawn new item)
+				this.item[0] = (Math.random() * 2 - 1) * 10
+				if (this.flag_3d) {
+					this.item[1] = (Math.random() * 2 - 1) * 10
+				} else {
+					this.item[1] = 0
+				}
+				this.item[2] = -1 * ((Math.random() * 100) + this.spawnDistance)
+			}
+            this.item[2] += this.speed;
+
             //need to make z increase on each iteration
             for(let i = 0; i < this.mines.length; i++){
                 
                 mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], this.mines[i][1], this.mines[i][2] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
-                this.mines[i][2] += this.speedup;
+                this.mines[i][2] += this.speed;
                 this.shapes.mine.draw(context, program_state, mine_transform, this.materials.mines)
 
                 //check if any have passed the camera
@@ -355,23 +412,26 @@ export class minefield extends Scene {
                     i = this.mines.length;
                     break;
                 }
+
+                if (Math.abs(sub_x - this.item[0]) <= 2 && Math.abs(sub_y - this.item[1]) <= 2 && Math.abs(sub_z - this.item[2]) <= 3) {
+                    //refill bullets
+                    this.bullet_count = this.max_bullets
+    
+                    //delete item
+                    this.item = [0, 0, -200]
+                }
+
                 for(let j = 0; j < this.bullets.length; j++) {
                     var bullet_x = this.bullets[j][0][3];
                     var bullet_y = this.bullets[j][1][3];
                     var bullet_z = this.bullets[j][2][3];
-                    //have some tolerance for collision
-                    //collisoin for bullets and mine r
+
                     if(Math.abs(bullet_x-mines_x) <= 0.7 && Math.abs(bullet_y-mines_y) <= 0.7 && Math.abs((bullet_z+15)-mines_z) <= 5){
-                        //put both out of sight
-                        //swap with end for O(1) deletions if too slow 
                         console.log("collision!")
-                        // this.bullets.splice(j, 1);
-                        // this.mines.splice(i, 1);
-                        // break;
                         this.bullets[j][2][3] = -21; //put bullet out of range for cleanup later, cant mess with array length
                         this.mines[i][2] = 21;
                         this.shapes.mine.draw(context, program_state, this.bullets[j], this.materials.mines)
-                        this.shapes.cube.draw(context, program_state, this.bullets[j], this.materials.test);
+                        this.shapes.bullet.draw(context, program_state, this.bullets[j], this.materials.test);
                         break;
     
                     }
@@ -379,9 +439,9 @@ export class minefield extends Scene {
             }
 
         }
-        else{
+        else if(this.paused && this.val != "START"){
             for(let i = 0; i < this.bullets.length; i++){
-                this.shapes.cube.draw(context, program_state, this.bullets[i], this.materials.test);
+                this.shapes.bullet.draw(context, program_state, this.bullets[i], this.materials.test);
             }
             for(let i = 0; i < this.mines.length; i++){
                 let mine_transform = Mat4.identity()
