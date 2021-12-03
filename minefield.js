@@ -5,6 +5,8 @@ const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Shader, Matrix, Mat4, Light, Shape, Material, Scene, Texture
 } = tiny;
 
+const {Textured_Phong} = defs
+
 export class minefield extends Scene {
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
@@ -41,15 +43,20 @@ export class minefield extends Scene {
         const bump = new defs.Fake_Bump_Map(1);
         this.materials = {
             test: new Material(new defs.Phong_Shader(),
-                {ambient: .4, specularity: 1, diffusivity: .6, color: hex_color("#000000")}),
+                {ambient: 1, specularity: 1, diffusivity: 1, color: hex_color("#000000")}),
             // horizon: new Material(new defs.Phong_Shader(),
             //     {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#ADD8E6")}),
-            horizon: new Material(bump, {ambient: 1, texture: new Texture("assets/underwater.jpg")}),
+            // horizon: new Material(bump, {ambient: 1, texture: new Texture("assets/underwater.jpg")}),
+            horizon: new Material(new Texture_Rotate(), {
+                color: hex_color("#ADD8E6"),
+                ambient: 0.10,
+                texture: new Texture("assets/underwater.jpg", "NEAREST")
+            }),
             horizon_start: new Material(bump, {ambient: 1, texture: new Texture("assets/underwaterStart.jpeg")}),
             horizon_end: new Material(bump, {ambient: 1, texture: new Texture("assets/underwaterEnd.jpeg")}),
             // ground: new Material(new defs.Phong_Shader(),
             //     {ambient: 1, specularity: 1, diffusivity: .6, color: hex_color("#ffffff")}),
-            // ground: new Material(bump, {ambient: 1, texture: new Texture("assets/sand.jpg")}),
+            ground: new Material(bump, {ambient: 1, texture: new Texture("assets/sand.jpg")}),
             mines: new Material(new defs.Phong_Shader(),
                 {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#808080")}),
             fish: new Material(new defs.Phong_Shader(),
@@ -59,7 +66,9 @@ export class minefield extends Scene {
             whale_shark: new Material(new defs.Phong_Shader(),
                 {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#A7ADB1")}),
             item: new Material(new defs.Phong_Shader(),
-                {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("F700FF")}),     
+                {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("F700FF")}),   
+            bullet: new Material(new defs.Phong_Shader(),
+            {ambient: .4, specularity: 1, diffusivity: .6, color: hex_color("#000000")}), 
         }
 
         this.initial_camera_location = Mat4.look_at(vec3(0, 2, 13), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -154,7 +163,7 @@ export class minefield extends Scene {
     fire_bullet() {
         
         if(this.bullet_count > 0) {
-            this.bullets.push(this.player_matrix.times(Mat4.scale(0.1,0.1,0.1)));
+            this.bullets.push(this.player_matrix.times(Mat4.scale(0.3,0.3,0.1)));
             var snd = new Audio("assets/laserShoot.wav"); // buffers automatically when created
             snd.play();
             this.bullet_count -= 1
@@ -211,10 +220,10 @@ export class minefield extends Scene {
         }
 
 
-        for(let i = 0; i < 60; i++){
+        for(let i = 0; i < 200; i++){
             x = (Math.random() * 2 - 1) * 10
             y = (Math.random() * 2 - 1) * 10
-            z = -1 * Math.random() * 10
+            z = -1 * ((Math.random() * 1000) + this.spawnDistance)
 
 
             this.mines.push([x, y, z])
@@ -236,7 +245,7 @@ export class minefield extends Scene {
             for(let i = 0; i < 100; i++){
                 let x = (Math.random() * 2 - 1) * 10
                 let y = (Math.random() * 2 - 1) * 10
-                let z = -1 * Math.random() * 10
+                let z = -1 * ((Math.random() * 1000) + this.spawnDistance)
     
                 this.mines.push([x, y, z])
                 this.mines_y.push(y)
@@ -256,7 +265,7 @@ export class minefield extends Scene {
             }
 
             this.player_matrix[1][3] = 0;
-            this.mines = this.mines.slice(0, Math.floor(this.mines.length/4))
+            this.mines = this.mines.slice(0, Math.floor(this.mines.length/2))
 
         }
     }
@@ -275,6 +284,7 @@ export class minefield extends Scene {
         while(new_lines.length > 0){
             new_lines[0].parentNode.removeChild(new_lines[0]);
         }
+        this.paused = false;
         this.make_control_panel()
     }
 
@@ -362,20 +372,23 @@ export class minefield extends Scene {
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 2000);
 
-        //bullets -> 4x4 -> x: this.bullets[i][0][3], z: this.bullets[i][2][3]
-
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 3 and 4)
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         this.t = t;
 
         let model_transform = this.player_matrix;
-        // this.ground_matrix = Mat4.identity().times(Mat4.scale(18, 5, 1)).times(Mat4.translation(0,-2,-10).times(Mat4.rotation(3,1,0,0)));
+        // this.ground_matrix = Mat4.identity().times(Mat4.translation(0,10,-50)).times(Mat4.rotation(0.9, 1, 0,0)).times(Mat4.translation(0,10,50));
+        // this.ground_matrix = this.ground_matrix.times(Mat4.translation(0,10,-20))
+
 
         //lighting
         const light_position = vec4(0, 0, 0, 1);
+        const light_position_2 = vec4(this.player_matrix[0][3], this.player_matrix[1][3], this.player_matrix[2][3], 1);
 
-        program_state.lights = [new Light(light_position, color(0, 0, 0, 1), 10000)]
+        program_state.lights = [new Light(light_position, color(0, 0, 0, 1), 10000), new Light(light_position_2, color(1, 1, 1, 1), 10000)]
         this.shapes.cylinder.draw(context, program_state, model_transform, this.materials.test)
+        // this.shapes.ground.draw(context, program_state, this.ground_matrix, this.materials.ground)
+
 
         if(this.val == "START") {
             this.paused = true;
@@ -384,7 +397,6 @@ export class minefield extends Scene {
 
         }
         else if(this.val == "PLAY") {
-            this.paused = false;
             //do speedup
             if(t > this.next_time){
                 this.speed = this.speed + 0.03;
@@ -406,7 +418,7 @@ export class minefield extends Scene {
         // this.shapes.cube.draw(context, program_state, this.ground_matrix, this.materials.ground)
             for(let i = 0; i < this.bullets.length; i++){
                 this.bullets[i] = this.bullets[i].times(Mat4.translation(0,0,1));
-                this.shapes.bullet.draw(context, program_state, this.bullets[i], this.materials.test);
+                this.shapes.bullet.draw(context, program_state, this.bullets[i], this.materials.bullet);
             }
         
             //keeps elements based on condition (x[2][3] -> z coordinate (need last index (3)))
@@ -441,7 +453,7 @@ export class minefield extends Scene {
             //need to make z increase on each iteration
             for(let b = 0; b < this.wildlife.length; b++){
 
-            	this.wildlife[b][0] += this.wildlife[b][3]
+            	this.wildlife[b][0] += this.wildlife[b][3] / 2
                 this.wildlife[b][2] += this.speed;
                 
                 //draw the correct type of wildlife
@@ -521,7 +533,7 @@ export class minefield extends Scene {
                     else {
                         this.mines[i][1] = 0
                     }
-                    this.mines[i][2] = -1 * Math.random() * 10
+                    this.mines[i][2] = -1 * ((Math.random() * 1000) + this.spawnDistance)
                     this.mines_y[i] = this.mines[i][1]
                     
                 }
@@ -582,10 +594,10 @@ export class minefield extends Scene {
                         var snd = new Audio("assets/explosion.wav"); // buffers automatically when created
                         snd.play();
                         console.log("collision!")
-                        this.bullets[j][2][3] = -21; //put bullet out of range for cleanup later, cant mess with array length
+                        this.bullets[j][2][3] = -201; //put bullet out of range for cleanup later, cant mess with array length
                         this.mines[i][2] = 21;
                         this.shapes.mine.draw(context, program_state, this.bullets[j], this.materials.mines)
-                        this.shapes.bullet.draw(context, program_state, this.bullets[j], this.materials.test);
+                        this.shapes.bullet.draw(context, program_state, this.bullets[j], this.materials.bullet);
                         break;
     
                     }
@@ -594,12 +606,8 @@ export class minefield extends Scene {
 
         }
         else if(this.paused && this.val != "START"){
-
-//             this.shapes.fish.draw(context, program_state, Mat4.identity().times(Mat4.translation(0, 0, -20).times(Mat4.rotation(-50, 0, 0, 1)).times(Mat4.rotation(-90, 0, 1, 0).times(Mat4.rotation(-90, 1, 0, 0)))), this.materials.fish)
-//         	this.shapes.shark.draw(context, program_state, Mat4.identity().times(Mat4.translation(5, 0, -20).times(Mat4.rotation(-50, 0, 0, 1)).times(Mat4.rotation(-90, 0, 1, 0).times(Mat4.rotation(-90, 1, 0, 0)))), this.materials.shark)
-//         	this.shapes.whale_shark.draw(context, program_state, Mat4.identity().times(Mat4.translation(-5, 0, -20).times(Mat4.rotation(-90, 1, 0, 0))), this.materials.whale_shark)
             for(let i = 0; i < this.bullets.length; i++){
-                this.shapes.bullet.draw(context, program_state, this.bullets[i], this.materials.test);
+                this.shapes.bullet.draw(context, program_state, this.bullets[i], this.materials.bullet);
             }
             for(let i = 0; i < this.mines.length; i++){
                 let mine_transform = Mat4.identity()
@@ -607,8 +615,72 @@ export class minefield extends Scene {
                 mine_transform = Mat4.identity().times(Mat4.translation(this.mines[i][0], this.mines[i][1], this.mines[i][2] - spawnDistance)).times(Mat4.scale(0.2,0.2,0.2))
                 this.shapes.mine.draw(context, program_state, mine_transform, this.materials.mines)
             }
+
+            let item_transform = Mat4.identity().times(Mat4.translation(this.item[0], this.item[1], this.item[2]))
+			this.shapes.torus.draw(context, program_state, item_transform, this.materials.item)
+
+            let wildlife_transform = Mat4.identity()
+            for(let b = 0; b < this.wildlife.length; b++){
+                if(this.wildlife[b][4] == 0){
+                    //fish
+                    if(this.wildlife[b][3] < 0){
+                        //fish is swimming right, need to rotate matrix 180
+                        wildlife_transform = Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(-50, 0, 0, 1)).times(Mat4.rotation(-90, 0, 1, 0)).times(Mat4.rotation(-90, 1, 0, 0))
+                    }
+                    else{
+                        wildlife_transform = Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(180, 0, 1, 0)).times(Mat4.rotation(-50, 0, 0, 1)).times(Mat4.rotation(-90, 0, 1, 0)).times(Mat4.rotation(-90, 1, 0, 0))
+                    }
+                    this.shapes.fish.draw(context, program_state, wildlife_transform, this.materials.fish)
+                }
+                else if(this.wildlife[b][4] == 1){
+                    //shark
+                    if(this.wildlife[b][3] < 0){
+                        //fish is swimming right, need to rotate matrix 180
+                        wildlife_transform =  Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(-50, 0, 0, 1)).times(Mat4.rotation(-90, 0, 1, 0)).times(Mat4.rotation(-90, 1, 0, 0))
+                    }
+                    else{
+                        wildlife_transform =  Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(180, 0, 1, 0)).times(Mat4.rotation(-50, 0, 0, 1)).times(Mat4.rotation(-90, 0, 1, 0)).times(Mat4.rotation(-90, 1, 0, 0))
+                    }
+                    this.shapes.shark.draw(context, program_state, wildlife_transform, this.materials.shark)
+                }
+                else if(this.wildlife[b][4] == 2){
+                    //whale shark
+                    if(this.wildlife[b][3] < 0){
+                        //fish is swimming right, need to rotate matrix 180
+                        wildlife_transform = Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(-90, 1, 0, 0))
+                    }
+                    else{
+                        wildlife_transform = Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2])).times(Mat4.rotation(180, 0, 1, 0)).times(Mat4.rotation(-90, 1, 0, 0))
+                    }
+                    this.shapes.whale_shark.draw(context, program_state, wildlife_transform, this.materials.whale_shark)
+                }
+            }
+          
         }
 
     }
 }
 
+
+class Texture_Rotate extends Textured_Phong {
+    // TODO:  Modify the shader below (right now it's just the same fragment shader as Textured_Phong) for requirement #7.
+    fragment_glsl_code() {
+        return this.shared_glsl_code() + `
+            varying vec2 f_tex_coord;
+            uniform sampler2D texture;
+            uniform float animation_time;
+            void main(){
+                // Sample the texture image in the correct place:
+                float angle = 1.57*animation_time;
+                vec2 temp = f_tex_coord - 0.5;
+                mat2 m = mat2(cos(angle),sin(angle),-sin(angle),cos(angle));
+                temp = temp * m + 0.5;
+                vec4 tex_color = texture2D( texture, temp);
+                if( tex_color.w < .01 ) discard;
+                                                                         // Compute an initial (ambient) color:
+                gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz ) * ambient, shape_color.w * tex_color.w ); 
+                                                                         // Compute the final color with contributions from lights:
+                gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
+        } `;
+    }
+}
