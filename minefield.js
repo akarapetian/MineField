@@ -64,9 +64,9 @@ export class minefield extends Scene {
             shark: new Material(new defs.Phong_Shader(),
                 {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#7BB7B2")}),
             whale_shark: new Material(new defs.Phong_Shader(),
-                {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#A7ADB1")}),
+                {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#A7ADB")}),
             item: new Material(new defs.Phong_Shader(),
-                {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("F700FF")}),   
+                {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#FFD700")}),   
             bullet: new Material(new defs.Phong_Shader(),
             {ambient: .4, specularity: 1, diffusivity: .6, color: hex_color("#000000")}), 
         }
@@ -112,7 +112,7 @@ export class minefield extends Scene {
 
         //initalize 10 randomly placed mines 
         //in future we need to guanantee non-collision between mines that spawn
-        for(let i = 0; i < 200; i++){
+        for(let i = 0; i < 400; i++){
             x = (Math.random() * 2 - 1) * 10
             y = (Math.random() * 2 - 1) * 10
             z = -1 * ((Math.random() * 1000) + this.spawnDistance)
@@ -211,10 +211,6 @@ export class minefield extends Scene {
             }
             y = (Math.random() * 2 - 1) * 10
             z = -1 * ((Math.random() * 1000) + this.spawnDistance)
-
-            
-
-
             s = -1 * Math.random() * 2 * Math.sign(x)
             t = Math.floor(Math.random() * 2)//type of wildlife (0-2)
 
@@ -223,11 +219,10 @@ export class minefield extends Scene {
         }
 
 
-        for(let i = 0; i < 200; i++){
+        for(let i = 0; i < 400; i++){
             x = (Math.random() * 2 - 1) * 10
             y = (Math.random() * 2 - 1) * 10
             z = -1 * ((Math.random() * 1000) + this.spawnDistance)
-
 
             this.mines.push([x, y, z])
             this.mines_y.push(y)
@@ -245,7 +240,7 @@ export class minefield extends Scene {
             this.player_matrix[1][3] = this.player_y;
 
             //generate 30 more mines to add to the 3d space
-            for(let i = 0; i < 100; i++){
+            for(let i = 0; i < 200; i++){
                 let x = (Math.random() * 2 - 1) * 10
                 let y = (Math.random() * 2 - 1) * 10
                 let z = -1 * ((Math.random() * 1000) + this.spawnDistance)
@@ -666,7 +661,6 @@ export class minefield extends Scene {
 }
 
 class Texture_Scroll_X extends Textured_Phong {
-    // TODO:  Modify the shader below (right now it's just the same fragment shader as Textured_Phong) for requirement #6.
     fragment_glsl_code() {
         return this.shared_glsl_code() + `
             varying vec2 f_tex_coord;
