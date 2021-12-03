@@ -94,7 +94,7 @@ export class minefield extends Scene {
 
         //initalize 10 randomly placed mines 
         //in future we need to guanantee non-collision between mines that spawn
-        for(let i = 0; i < 500; i++){
+        for(let i = 0; i < 200; i++){
             x = (Math.random() * 2 - 1) * 10
             y = (Math.random() * 2 - 1) * 10
             z = -1 * ((Math.random() * 1000) + this.spawnDistance)
@@ -144,18 +144,18 @@ export class minefield extends Scene {
     }
 
     fire_bullet() {
-        var snd = new Audio("assets/laserShoot.wav"); // buffers automatically when created
-        snd.play();
-        this.bullets.push(this.player_matrix.times(Mat4.scale(0.1,0.1,0.1)));
+        
+        if(this.bullet_count > 0) {
+            this.bullets.push(this.player_matrix.times(Mat4.scale(0.1,0.1,0.1)));
+            var snd = new Audio("assets/laserShoot.wav"); // buffers automatically when created
+            snd.play();
+            this.bullet_count -= 1
+        }
     }
 
     pause() {
         this.paused = !this.paused;
     }
-
-    refill_bullets(){
-		this.bullet_count = this.max_bullets
-	}
 
     restart() {
         this.scores.push(this.score);
@@ -218,7 +218,7 @@ export class minefield extends Scene {
             this.player_matrix[1][3] = this.player_y;
 
             //generate 30 more mines to add to the 3d space
-            for(let i = 0; i < 30; i++){
+            for(let i = 0; i < 100; i++){
                 let x = (Math.random() * 2 - 1) * 10
                 let y = (Math.random() * 2 - 1) * 10
                 let z = -1 * Math.random() * 10
@@ -241,7 +241,7 @@ export class minefield extends Scene {
             }
 
             this.player_matrix[1][3] = 0;
-            this.mines = this.mines.slice(0, Math.floor(this.mines.length/2))
+            this.mines = this.mines.slice(0, Math.floor(this.mines.length/4))
 
         }
     }
@@ -304,8 +304,11 @@ export class minefield extends Scene {
                 this.live_string(box => {
                 box.textContent = (i+1).toString() + ": " + this.scores[i]
             });
-            this.new_line();
-        }
+                this.new_line();
+            }
+            this.live_string(box => {
+                box.textContent = "Torpedos Left: " + this.bullet_count;
+            });
         }
         
         else if(this.val == "START") {
