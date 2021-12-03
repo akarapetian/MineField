@@ -41,6 +41,8 @@ export class minefield extends Scene {
             // horizon: new Material(new defs.Phong_Shader(),
             //     {ambient: 0.2, specularity: 1, diffusivity: .6, color: hex_color("#ADD8E6")}),
             horizon: new Material(bump, {ambient: 1, texture: new Texture("assets/underwater.jpg")}),
+            horizon_start: new Material(bump, {ambient: 1, texture: new Texture("assets/underwaterStart.jpeg")}),
+            horizon_end: new Material(bump, {ambient: 1, texture: new Texture("assets/underwaterEnd.jpeg")}),
             // ground: new Material(new defs.Phong_Shader(),
             //     {ambient: 1, specularity: 1, diffusivity: .6, color: hex_color("#ffffff")}),
             // ground: new Material(bump, {ambient: 1, texture: new Texture("assets/sand.jpg")}),
@@ -147,6 +149,7 @@ export class minefield extends Scene {
             this.mines.push([x, y, z])
             this.mines_y.push(y)
         }
+        this.start_game();
     }
 
     toggle_3d() {
@@ -192,6 +195,10 @@ export class minefield extends Scene {
         while(live_strings.length > 0){
             live_strings[0].parentNode.removeChild(live_strings[0]);
         }
+        var new_lines = document.getElementsByTagName('br');
+        while(new_lines.length > 0){
+            new_lines[0].parentNode.removeChild(new_lines[0]);
+        }
         this.make_control_panel()
     }
 
@@ -204,6 +211,10 @@ export class minefield extends Scene {
         var live_strings = document.getElementsByClassName('live_string');
         while(live_strings.length > 0){
             live_strings[0].parentNode.removeChild(live_strings[0]);
+        }
+        var new_lines = document.getElementsByTagName('br');
+        while(new_lines.length > 0){
+            new_lines[0].parentNode.removeChild(new_lines[0]);
         }
         this.make_control_panel()
     }
@@ -228,9 +239,12 @@ export class minefield extends Scene {
                 box.textContent = "Previous Scores: "
             });
             this.new_line();
-            this.live_string(box => {
-                box.textContent = this.scores.join(", ");
+            for(let i = 0; i <= this.scores.length-1 ; i++){
+                this.live_string(box => {
+                box.textContent = (i+1).toString() + ": " + this.scores[i]
             });
+            this.new_line();
+        }
         }
         
         else if(this.val == "START") {
@@ -275,29 +289,39 @@ export class minefield extends Scene {
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         this.t = t;
 
-        if(this.val == "START") {
-            this.paused = true;
-        }
-        else if(this.val == "PLAY") {
-            this.paused = false;
-        }
-
-        //do speedup
-        if(t > this.next_time){
-            this.speedup = this.speedup + 0.03;
-            this.next_time += 3;
-        }
-
         let model_transform = this.player_matrix;
-        var horizon_transform = Mat4.identity().times(Mat4.scale(150, 50, 1)).times(Mat4.translation(0,0,-20));
         // this.ground_matrix = Mat4.identity().times(Mat4.scale(18, 5, 1)).times(Mat4.translation(0,-2,-10).times(Mat4.rotation(3,1,0,0)));
 
         //lighting
         const light_position = vec4(0, 0, 0, 1);
 
         program_state.lights = [new Light(light_position, color(0, 0, 0, 1), 10000)]
-        this.shapes.cube.draw(context, program_state, horizon_transform, this.materials.horizon)
         this.shapes.cylinder.draw(context, program_state, model_transform, this.materials.test)
+
+        if(this.val == "START") {
+            this.paused = true;
+            var horizon_transform = Mat4.identity().times(Mat4.translation(0,0,-50)).times(Mat4.scale(50, 50, 1));
+            this.shapes.cube.draw(context, program_state, horizon_transform, this.materials.horizon_start)
+
+        }
+        else if(this.val == "PLAY") {
+            this.paused = false;
+            //do speedup
+            if(t > this.next_time){
+                this.speedup = this.speedup + 0.03;
+                this.next_time += 3;
+            }
+            var horizon_transform = Mat4.identity().times(Mat4.scale(150, 50, 1)).times(Mat4.translation(0,0,-20));
+            this.shapes.cube.draw(context, program_state, horizon_transform, this.materials.horizon)
+
+        }
+        else if(this.val == "END") {
+            this.paused = true;
+            var horizon_transform = Mat4.identity();
+            var horizon_transform = Mat4.identity().times(Mat4.translation(0,0,-50)).times(Mat4.scale(50, 50, 1));
+            this.shapes.cube.draw(context, program_state, horizon_transform, this.materials.horizon_end)
+
+        }
 
         if (!this.paused) {
         // this.shapes.cube.draw(context, program_state, this.ground_matrix, this.materials.ground)
@@ -379,7 +403,7 @@ export class minefield extends Scene {
             }
 
         }
-        else{
+        else if(this.paused && this.val != "START"){
             for(let i = 0; i < this.bullets.length; i++){
                 this.shapes.cube.draw(context, program_state, this.bullets[i], this.materials.test);
             }
