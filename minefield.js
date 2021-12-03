@@ -61,6 +61,7 @@ export class minefield extends Scene {
         this.flag_3d = true;
         this.scores = [];
         this.t = 0; //constant time, used in speedup
+        this.val = "START";
 
         let x = 0
         let y = 0
@@ -181,28 +182,76 @@ export class minefield extends Scene {
         }
     }
 
+    start_game() {
+        this.val = "PLAY";
+        var buttons = document.getElementsByTagName('button');
+        while(buttons.length > 0){
+            buttons[0].parentNode.removeChild(buttons[0]);
+        }
+        var live_strings = document.getElementsByClassName('live_string');
+        while(live_strings.length > 0){
+            live_strings[0].parentNode.removeChild(live_strings[0]);
+        }
+        this.make_control_panel()
+    }
+
+    end_game() {
+        this.val = "END";
+        var buttons = document.getElementsByTagName('button');
+        while(buttons.length > 0){
+            buttons[0].parentNode.removeChild(buttons[0]);
+        }
+        var live_strings = document.getElementsByClassName('live_string');
+        while(live_strings.length > 0){
+            live_strings[0].parentNode.removeChild(live_strings[0]);
+        }
+        this.make_control_panel()
+    }
+
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("right", ["d"], () => this.move_right());
-        this.key_triggered_button("left", ["a"], () => this.move_left());
-        this.key_triggered_button("up", ["w"], () => this.move_up());
-        this.key_triggered_button("down", ["s"], () => this.move_down());
-        this.key_triggered_button("fire", ["f"], () => this.fire_bullet());
-        this.key_triggered_button("paused", ["p"], () => this.pause());
-        this.key_triggered_button("restart", ["r"], () => this.restart());
-        this.key_triggered_button("toggle 3d", ["t"], () => this.toggle_3d());
-        this.new_line();
-        this.live_string(box => {
-            box.textContent = "Your score is " + this.score + " so far"
-        });
-        this.new_line();
-        this.live_string(box => {
-            box.textContent = "Previous Scores: "
-        });
-        this.new_line();
-        this.live_string(box => {
-            box.textContent = this.scores.join(", ");
-        });
+        if(this.val == "PLAY"){
+            this.key_triggered_button("right", ["d"], () => this.move_right());
+            this.key_triggered_button("left", ["a"], () => this.move_left());
+            this.key_triggered_button("up", ["w"], () => this.move_up());
+            this.key_triggered_button("down", ["s"], () => this.move_down());
+            this.key_triggered_button("fire", ["f"], () => this.fire_bullet());
+            this.key_triggered_button("paused", ["p"], () => this.pause());
+            this.key_triggered_button("restart", ["r"], () => this.restart());
+            this.key_triggered_button("toggle 3d", ["t"], () => this.toggle_3d());
+            this.new_line();
+            this.live_string(box => {
+                box.textContent = "Your score is " + this.score + " so far"
+            });
+            this.new_line();
+            this.live_string(box => {
+                box.textContent = "Previous Scores: "
+            });
+            this.new_line();
+            this.live_string(box => {
+                box.textContent = this.scores.join(", ");
+            });
+        }
+        
+        else if(this.val == "START") {
+            var buttons = document.getElementsByTagName('button');
+            if (buttons) {
+                for (var i = 0; i < buttons.length; i++) {
+                buttons[i].remove();
+                }
+            }
+            this.live_string(box => {
+                box.textContent = "Welcome to Minefield! You are an underwater explorer avoiding obstacles and trying to swim to safety! To move, use the buttons shown or click them on screen. The longer you survive the more points you get!"
+            });
+            this.key_triggered_button("Start Game", ["s"], () => this.start_game());
+        }
+        else if(this.val == "END") {
+            this.live_string(box => {
+                box.textContent = "You lost! Here are your high scores, press the restart button to try again!"
+            });
+            this.key_triggered_button("restart", ["r"], () => this.restart());
+
+        }
     }
 
     display(context, program_state) {
@@ -225,6 +274,13 @@ export class minefield extends Scene {
         // TODO:  Fill in matrix operations and drawing code to draw the solar system scene (Requirements 3 and 4)
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
         this.t = t;
+
+        if(this.val == "START") {
+            this.paused = true;
+        }
+        else if(this.val == "PLAY") {
+            this.paused = false;
+        }
 
         //do speedup
         if(t > this.next_time){
@@ -295,6 +351,7 @@ export class minefield extends Scene {
                 if(Math.abs(sub_x-mines_x) <= 0.7 && Math.abs(sub_y-mines_y) <= 0.7 && Math.abs((sub_z+15)-mines_z) <= 5){
                     this.paused = true;
                     console.log('end');
+                    this.end_game()
                     i = this.mines.length;
                     break;
                 }
