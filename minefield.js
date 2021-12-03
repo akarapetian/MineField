@@ -72,12 +72,25 @@ export class minefield extends Scene {
 		this.max_bullets = 10
         this.spawnDistance = 40
         this.item = [0, 0, -200]
-        this.wildlife = [] //store x y and z location of each fish
+        this.wildlife = [] //store x y z and speed of each fish
 		this.wildlife_y = []
 
         let x = 0
         let y = 0
         let z = 0
+        let s = 0
+        let t = 0
+
+        //initalize wildlife 
+        for(let i = 0; i < 20; i++){
+            x = (Math.random() * 2 - 1) * 10
+            y = (Math.random() * 2 - 1) * 10
+            z = -1 * ((Math.random() * 1000) + this.spawnDistance)
+            s = (Math.random() - 0.5) * 5
+            t = Math.floor(Math.random() * 2)//type of wildlife (0-2)
+            this.wildlife.push([x, y, z, s, t])
+            this.wildlife_y.push(y)
+        }
 
         //initalize 10 randomly placed mines 
         //in future we need to guanantee non-collision between mines that spawn
@@ -95,6 +108,12 @@ export class minefield extends Scene {
         this.speed = 0.1; //actual speedup amount
 
     }
+
+//     function getRandomInt(min, max) {
+//   min = Math.ceil(min);
+//   max = Math.floor(max);
+//   return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+// }
 
     move_left() {
         if (!this.paused) {
@@ -157,10 +176,31 @@ export class minefield extends Scene {
         this.paused = false
         this.next_time = this.t + 3;
         this.speed = 0.1;
+        this.wildlife = [] //store x y and z location of each fish
+		this.wildlife_y = []
+		this.item = [0, 0, -200]
+		this.bullet_count = 10
+
+		let x, y, z, s, t = 0
+
+        //initalize wildlife 
+        for(let i = 0; i < 20; i++){
+            x = (Math.random() * 2 - 1) * 10
+            y = (Math.random() * 2 - 1) * 10
+            z = -1 * ((Math.random() * 1000) + this.spawnDistance)
+            s = (Math.random() - 0.5) * 5
+            t = Math.floor(Math.random() * 2)//type of wildlife (0-2)
+
+            this.wildlife.push([x, y, z, s, t])
+            this.wildlife_y.push(y)
+        }
+
+
         for(let i = 0; i < 60; i++){
-            let x = (Math.random() * 2 - 1) * 10
-            let y = (Math.random() * 2 - 1) * 10
-            let z = -1 * Math.random() * 10
+            x = (Math.random() * 2 - 1) * 10
+            y = (Math.random() * 2 - 1) * 10
+            z = -1 * Math.random() * 10
+
 
             this.mines.push([x, y, z])
             this.mines_y.push(y)
@@ -195,6 +235,11 @@ export class minefield extends Scene {
                 //set y = 0 for all 
                 this.mines[i][1] = 0;
             }
+            
+            for(let j = 0; j < this.wildlife.length; j++){
+            	this.wildlife[j][1] = 0
+            }
+
             this.player_matrix[1][3] = 0;
             this.mines = this.mines.slice(0, Math.floor(this.mines.length/2))
 
@@ -357,7 +402,13 @@ export class minefield extends Scene {
 
             let item_transform = Mat4.identity()
 
+            let wildlife_transform = Mat4.identity()
+
             //type of item attribute?
+
+
+
+
 
             //ammo pickup
 			item_transform = Mat4.identity().times(Mat4.translation(this.item[0], this.item[1], this.item[2]))
@@ -373,6 +424,35 @@ export class minefield extends Scene {
 				this.item[2] = -1 * ((Math.random() * 100) + this.spawnDistance)
 			}
             this.item[2] += this.speed;
+
+            //draw wildlife
+            //need to make z increase on each iteration
+            for(let b = 0; b < this.wildlife.length; b++){
+                
+                wildlife_transform = Mat4.identity().times(Mat4.translation(this.wildlife[b][0], this.wildlife[b][1], this.wildlife[b][2] - spawnDistance))
+
+                this.wildlife[b][0] += this.wildlife[b][3]
+
+                this.wildlife[b][2] += this.speed;
+                
+                this.shapes.fish.draw(context, program_state, wildlife_transform, this.materials.mines)
+
+                //check if any have passed the camera
+                if (this.wildlife[b][2] > 20){
+                    //re-initalize the mine (delete and spawn new mine)
+                    this.wildlife[b][0] = (Math.random() * 2 - 1) * 10
+                    if(this.flag_3d) {
+                        this.wildlife[b][1] = (Math.random() * 2 - 1) * 10
+                    }
+                    else {
+                        this.wildlife[b][1] = 0
+                    }
+                    this.wildlife[b][2] = -1 * Math.random() * 10
+                    this.wildlife_y[b] = this.wildlife[b][1]
+                    
+                }
+                
+            }
 
             //need to make z increase on each iteration
             for(let i = 0; i < this.mines.length; i++){
