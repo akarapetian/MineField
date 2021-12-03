@@ -557,6 +557,31 @@ export class minefield extends Scene {
                     this.end_game()
                     break;
                 }  
+                
+                //collision between bullets and wildlife
+                for(let z = 0; z < this.bullets.length; z++){
+                    var bullet_x = this.bullets[z][0][3];
+                    var bullet_y = this.bullets[z][1][3];
+                    var bullet_z = this.bullets[z][2][3];
+
+                    if(Math.abs(bullet_x-wild_x) <= 0.7 && Math.abs(bullet_y-wild_y) <= 0.7 && Math.abs((bullet_z+15)-wild_z) <= 5){
+                        //put both out of sight
+                        //swap with end for O(1) deletions if too slow 
+                        var snd = new Audio("assets/explosion.wav"); // buffers automatically when created
+                        snd.play();
+                        console.log("collision!")
+                        this.bullets[z][2][3] = -201; //put bullet out of range for cleanup later, cant mess with array length
+                        this.wildlife[b][2] = 21;
+
+                        
+                        this.shapes.fish.draw(context, program_state, this.bullets[z], this.materials.fish)
+                        this.shapes.bullet.draw(context, program_state, this.bullets[z], this.materials.bullet);
+                        break;
+    
+                    }
+                }
+
+
             }
 
             for(let i = 0; i < this.mines.length; i++){
