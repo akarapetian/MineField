@@ -97,23 +97,26 @@ export class minefield extends Scene {
 		this.context = null;
 		this.program_state = null;
 		this.bullets = []
-		this.bullet_count = 12
-		this.max_bullets = 12
+		this.bullet_count = 20
+		this.max_bullets = 20
 		this.mines = [] //store the x and z location of each mine 
 		this.mines_y = []
 		this.player_y = 0;
 		this.flag_3d = true;
-        this.spawnDistance = 10
+        this.spawnDistance = 40
+        this.item = [0, 0, -200] //store x, y, and z of the item that is in the world (limited to 1 item in the world at once)
+
+
 		let x = 0
 		let y = 0
 		let z = 0
 
 		//initalize 10 randomly placed mines 
 		//in future we need to guanantee non-collision between mines that spawn
-		for (let i = 0; i < 60; i++) {
+		for (let i = 0; i < 500; i++) {
 			x = (Math.random() * 2 - 1) * 10
 			y = (Math.random() * 2 - 1) * 10
-			z = -1 * (Math.random() * 10 + this.spawnDistance)
+			z = -1 * ((Math.random() * 1000) + this.spawnDistance)
 			this.mines.push([x, y, z])
 			this.mines_y.push(y)
 		}
@@ -371,7 +374,7 @@ export class minefield extends Scene {
 		}
 
 		program_state.projection_transform = Mat4.perspective(
-			Math.PI / 4, context.width / context.height, .1, 1000);
+			Math.PI / 4, context.width / context.height, 0.1, 2000)
 
 		//bullets -> 4x4 -> x: this.bullets[i][0][3], z: this.bullets[i][2][3]
 
@@ -385,7 +388,7 @@ export class minefield extends Scene {
 		}
 
 		let model_transform = this.player_matrix;
-		var horizon_transform = Mat4.identity().times(Mat4.scale(150, 50, 1)).times(Mat4.translation(0, 0, -20));
+		var horizon_transform = Mat4.identity().times(Mat4.scale(200, 130, 1)).times(Mat4.translation(0, 0, -200));
 		// this.ground_matrix = Mat4.identity().times(Mat4.scale(18, 5, 1)).times(Mat4.translation(0,-2,-10).times(Mat4.rotation(3,1,0,0)));
 
 		//lighting
@@ -406,14 +409,38 @@ export class minefield extends Scene {
 			}
 
             //check bullets distance for deletion
-			this.bullets = this.bullets.filter(x => x[2][3] > -20);
+			this.bullets = this.bullets.filter(x => x[2][3] > -200);
 			// this.shapes.horizon.draw(context, program_state, this.horizon_matrix, this.materials.horizon);
 			// this.shapes.ground.draw(context, program_state, this.ground_matrix, this.materials.ground);
 
                 
-			let mine_transform = Mat4.identity()
-			
+            //update and draw item pick-ups
+            let item_transform = Mat4.identity()
 
+            //type of item attribute?
+
+            //ammo pickup
+			item_transform = Mat4.identity().times(Mat4.translation(this.item[0], this.item[1], this.item[2]))
+			this.shapes.torus.draw(context, program_state, item_transform, this.materials.test)
+			if (this.item[2] > 20) {
+				//re-initalize the item (delete and spawn new item)
+				this.item[0] = (Math.random() * 2 - 1) * 10
+				if (this.flag_3d) {
+					this.item[1] = (Math.random() * 2 - 1) * 10
+				} else {
+					this.item[1] = 0
+				}
+				this.item[2] = -1 * ((Math.random() * 100) + this.spawnDistance)
+			}
+            this.item[2] += this.speed;
+
+            //nuclear shield
+
+            //more lives?
+
+
+			let mine_transform = Mat4.identity()
+            //update and draw mines
 			//need to make z increase on each iteration
 			for (let i = 0; i < this.mines.length; i++) {
 
@@ -449,6 +476,20 @@ export class minefield extends Scene {
 			var sub_y = this.player_matrix[1][3];
 			var sub_z = this.player_matrix[2][3];
 
+  
+
+			//check collision between sub and item
+			if (Math.abs(sub_x - this.item[0]) <= 2 && Math.abs(sub_y - this.item[1]) <= 2 && Math.abs(sub_z - this.item[2]) <= 3) {
+                //refill bullets
+                this.bullet_count = this.max_bullets
+
+                //delete item
+                this.item = [0, 0, -200]
+			}
+
+            
+
+
 			for (let i = 0; i < this.mines.length; i++) {
 				var mines_x = this.mines[i][0];
 				var mines_y = this.mines[i][1];
@@ -466,36 +507,41 @@ export class minefield extends Scene {
 					i = this.mines.length;
 					break;
 				}
-			}
 
-			for (let j = 0; j < this.bullets.length; j++) {
-				var bullet_x = this.bullets[j][0][3];
-				var bullet_y = this.bullets[j][1][3];
-				var bullet_z = this.bullets[j][2][3];
-				//have some tolerance for collision
-				//CHECK COLLISOIN WITH MINES AND BULLETS
-				if (Math.abs(bullet_x - mines_x) <= 0.7 && Math.abs(bullet_y - mines_y) <= 0.7 && Math.abs(bullet_z - mines_z) <= 0.7) {
-					//put both out of sight
-					//swap with end for O(1) deletions if too slow 
+				for (let j = 0; j < this.bullets.length; j++) {
+					var bullet_x = this.bullets[j][0][3];
+					var bullet_y = this.bullets[j][1][3];
+					var bullet_z = this.bullets[j][2][3];
+					//have some tolerance for collision
+					//CHECK COLLISOIN WITH MINES AND BULLETS
+					if (Math.abs(bullet_x - mines_x) <= 0.7 && Math.abs(bullet_y - mines_y) <= 0.7 && Math.abs(bullet_z - mines_z) <= 0.7) {
+						//put both out of sight
+						//swap with end for O(1) deletions if too slow 
 
 
-					console.log("collision!")
+						console.log("collision!")
 
-					// this.bullets.splice(j, 1);
-					// this.mines.splice(i, 1);
-					// break;
-					this.bullets[j][2][3] = -21;
-					this.mines[i][2] = 21;
-					this.shapes.mine.draw(context, program_state, this.bullets[j], this.materials.mines)
-					this.shapes.cube.draw(context, program_state, this.bullets[j], this.materials.test);
-					break;
+						// this.bullets.splice(j, 1);
+						// this.mines.splice(i, 1);
+						// break;
+						this.bullets[j][2][3] = -21;
+						this.mines[i][2] = 21;
+						this.shapes.mine.draw(context, program_state, this.bullets[j], this.materials.mines)
+						this.shapes.cube.draw(context, program_state, this.bullets[j], this.materials.test);
+						break;
 
+					}
 				}
 			}
 			
 
 		} else {
 			//THE GAME IS PAUSED
+
+			let item_transform = Mat4.identity()
+			item_transform = Mat4.identity().times(Mat4.translation(this.item[0], this.item[1], this.item[2]))
+			this.shapes.torus.draw(context, program_state, item_transform, this.materials.test)
+			
 			for (let i = 0; i < this.bullets.length; i++) {
 				this.shapes.cube.draw(context, program_state, this.bullets[i], this.materials.test);
 			}
