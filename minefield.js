@@ -91,6 +91,7 @@ export class minefield extends Scene {
         this.item = [0, 0, -200]
         this.wildlife = [] //store x y z and speed of each fish
 		this.wildlife_y = []
+        this.rotation = 0.0005;
 
 
 		let x, y, z, s, t = 0
@@ -121,7 +122,8 @@ export class minefield extends Scene {
         }
         this.score = 0
         this.paused = true
-        this.next_time = 3; //time it takes to increase the speed
+        this.next_time = 3; //time it takes to increase the 
+        this.next_rotate = 10;
         this.speed = 0.1; //actual speedup amount
 
     }
@@ -192,6 +194,7 @@ export class minefield extends Scene {
         this.flag_3d = true;
         this.paused = false
         this.next_time = this.t + 3;
+        this.next_rotate = this.t + 10;
         this.speed = 0.1;
         this.wildlife = [] //store x y and z location of each fish
 		this.wildlife_y = []
@@ -355,6 +358,7 @@ export class minefield extends Scene {
             this.key_triggered_button("restart", ["r"], () => this.restart());
 
         }
+        this.horizon_transform = Mat4.identity().times(Mat4.scale(200, 130, 1)).times(Mat4.translation(0,0,-200));
     }
 
     display(context, program_state) {
@@ -401,9 +405,16 @@ export class minefield extends Scene {
             if(t > this.next_time){
                 this.speed = this.speed + 0.03;
                 this.next_time += 3;
+
             }
-            var horizon_transform = Mat4.identity().times(Mat4.scale(200, 130, 1)).times(Mat4.translation(0,0,-200));
-            this.shapes.cube.draw(context, program_state, horizon_transform, this.materials.horizon)
+
+            if(t > this.next_rotate) {
+                this.rotation = this.rotation * -1;
+                this.next_rotate += 10;
+            }
+
+            this.horizon_transform = this.horizon_transform.times(Mat4.rotation(this.rotation, 0, Math.sin(2/3*Math.PI*dt), 0));
+            this.shapes.cube.draw(context, program_state, this.horizon_transform, this.materials.horizon)
 
         }
         else if(this.val == "END") {
@@ -678,6 +689,27 @@ class Texture_Rotate extends Textured_Phong {
                 vec4 tex_color = texture2D( texture, temp);
                 if( tex_color.w < .01 ) discard;
                                                                          // Compute an initial (ambient) color:
+                gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz ) * ambient, shape_color.w * tex_color.w ); 
+                                                                         // Compute the final color with contributions from lights:
+                gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
+        } `;
+    }
+}
+
+class Texture_Scroll_X extends Textured_Phong {
+    // TODO:  Modify the shader below (right now it's just the same fragment shader as Textured_Phong) for requirement #6.
+    fragment_glsl_code() {
+        return this.shared_glsl_code() + `
+            varying vec2 f_tex_coord;
+            uniform sampler2D texture;
+            uniform float animation_time;
+            
+            void main(){
+                // Sample the texture image in the correct place:
+                vec2 temp = f_tex_coord;
+                temp.x = temp.x-2.0 * mod(animation_time, 2.0);
+                vec4 tex_color = texture2D(texture, temp);
+                if( tex_color.w < .01 ) discard;
                 gl_FragColor = vec4( ( tex_color.xyz + shape_color.xyz ) * ambient, shape_color.w * tex_color.w ); 
                                                                          // Compute the final color with contributions from lights:
                 gl_FragColor.xyz += phong_model_lights( normalize( N ), vertex_worldspace );
