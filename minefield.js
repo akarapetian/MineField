@@ -115,6 +115,8 @@ export class minefield extends Scene {
     }
 
     fire_bullet() {
+        var snd = new Audio("assets/laserShoot.wav"); // buffers automatically when created
+        snd.play();
         this.bullets.push(this.player_matrix.times(Mat4.scale(0.1,0.1,0.1)));
     }
 
@@ -388,6 +390,8 @@ export class minefield extends Scene {
                     if(Math.abs(bullet_x-mines_x) <= 0.7 && Math.abs(bullet_y-mines_y) <= 0.7 && Math.abs((bullet_z+15)-mines_z) <= 5){
                         //put both out of sight
                         //swap with end for O(1) deletions if too slow 
+                        var snd = new Audio("assets/explosion.wav"); // buffers automatically when created
+                        snd.play();
                         console.log("collision!")
                         // this.bullets.splice(j, 1);
                         // this.mines.splice(i, 1);
